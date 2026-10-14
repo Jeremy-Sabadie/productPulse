@@ -14,11 +14,12 @@ import java.util.Objects;
 /**
  * Entité représentant un feedback enregistré dans ProductPulse.
  *
- * <p>L'entité protège son état en ne proposant pas
- * de setters publics.</p>
+ * <p>Chaque feedback appartient à une application et possède
+ * un auteur identifié.</p>
  *
- * <p>La date de création est fournie par le service métier
- * afin de permettre des tests déterministes.</p>
+ * <p>L'entité ne propose pas de setters publics.
+ * La date de création est fournie par le service métier
+ * pour garantir des tests déterministes.</p>
  */
 @Entity
 @Table(name = "feedback")
@@ -34,6 +35,12 @@ public class Feedback {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
+    @Column(nullable = false, length = 100, updatable = false)
+    private String applicationCode;
+
+    @Column(nullable = false, updatable = false)
+    private Long authorId;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -48,18 +55,26 @@ public class Feedback {
      *
      * @param title titre du feedback
      * @param description description du feedback
+     * @param applicationCode code de l'application concernée
+     * @param authorId identifiant de l'auteur
      * @param createdAt date de création
      * @throws NullPointerException si un argument est null
      */
     public Feedback(
             String title,
             String description,
+            String applicationCode,
+            Long authorId,
             Instant createdAt
     ) {
         this.title = Objects.requireNonNull(title, "title");
         this.description = Objects.requireNonNull(
                 description, "description"
         );
+        this.applicationCode = Objects.requireNonNull(
+                applicationCode, "applicationCode"
+        );
+        this.authorId = Objects.requireNonNull(authorId, "authorId");
         this.createdAt = Objects.requireNonNull(
                 createdAt, "createdAt"
         );
@@ -75,6 +90,14 @@ public class Feedback {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getApplicationCode() {
+        return applicationCode;
+    }
+
+    public Long getAuthorId() {
+        return authorId;
     }
 
     public Instant getCreatedAt() {

@@ -34,6 +34,9 @@ class FeedbackServiceTest {
     private static final Instant FIXED_DATE =
             Instant.parse("2026-10-13T10:00:00Z");
 
+    private static final String APPLICATION_CODE = "MY_POPOTE";
+    private static final Long AUTHOR_ID = 42L;
+
     @Mock
     private FeedbackRepository feedbackRepository;
 
@@ -54,7 +57,7 @@ class FeedbackServiceTest {
 
     /**
      * Vérifie la création d'un feedback valide,
-     * son contenu et son horodatage.
+     * son contenu, son auteur, son application et son horodatage.
      */
     @Test
     void shouldCreateFeedbackWhenRequestIsValid() {
@@ -66,11 +69,15 @@ class FeedbackServiceTest {
         when(feedbackRepository.save(any(Feedback.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Feedback result = feedbackService.createFeedback(request);
+        Feedback result = feedbackService.createFeedback(
+                request, APPLICATION_CODE, AUTHOR_ID
+        );
 
         assertNotNull(result);
         assertEquals(request.title(), result.getTitle());
         assertEquals(request.description(), result.getDescription());
+        assertEquals(APPLICATION_CODE, result.getApplicationCode());
+        assertEquals(AUTHOR_ID, result.getAuthorId());
         assertEquals(FIXED_DATE, result.getCreatedAt());
 
         verify(feedbackRepository).save(any(Feedback.class));
@@ -90,7 +97,9 @@ class FeedbackServiceTest {
         when(feedbackRepository.save(any(Feedback.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Feedback result = feedbackService.createFeedback(request);
+        Feedback result = feedbackService.createFeedback(
+                request, APPLICATION_CODE, AUTHOR_ID
+        );
 
         assertEquals("Mon titre", result.getTitle());
         assertEquals("Ma description", result.getDescription());
@@ -106,7 +115,9 @@ class FeedbackServiceTest {
     void shouldRejectNullRequest() {
         assertThrows(
                 NullPointerException.class,
-                () -> feedbackService.createFeedback(null)
+                () -> feedbackService.createFeedback(
+                        null, APPLICATION_CODE, AUTHOR_ID
+                )
         );
 
         verifyNoInteractions(feedbackRepository);
@@ -144,7 +155,9 @@ class FeedbackServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         Feedback result = feedbackService.createFeedback(
-                new CreateFeedbackRequest(title, "Description")
+                new CreateFeedbackRequest(title, "Description"),
+                APPLICATION_CODE,
+                AUTHOR_ID
         );
 
         assertEquals(150, result.getTitle().length());
@@ -167,15 +180,14 @@ class FeedbackServiceTest {
     /**
      * Vérifie qu'une entité nouvellement construite
      * ne possède pas encore d'identifiant de persistance.
-     *
-     * <p>L'identifiant est attribué par la base de données
-     * lors de l'enregistrement.</p>
      */
     @Test
     void shouldHaveNullIdBeforePersistence() {
         Feedback feedback = new Feedback(
                 "Titre valide",
                 "Description valide",
+                APPLICATION_CODE,
+                AUTHOR_ID,
                 FIXED_DATE
         );
 
@@ -183,8 +195,69 @@ class FeedbackServiceTest {
     }
 
     /**
+     * Vérifie le rejet d'une application absente.
+     */
+    @Test
+    void shouldRejectNullApplicationCode() {
+        assertInvalidOrigin(null, AUTHOR_ID);
+    }
+
+    /**
+     * Vérifie le rejet d'un code d'application vide.
+     */
+    @Test
+    void shouldRejectBlankApplicationCode() {
+        assertInvalidOrigin("   ", AUTHOR_ID);
+    }
+
+    /**
+     * Vérifie le rejet d'un code d'application
+     * dépassant la longueur maximale autorisée.
+     */
+    @Test
+    void shouldRejectApplicationCodeLongerThan100Characters() {
+        assertInvalidOrigin("A".repeat(101), AUTHOR_ID);
+    }
+
+    /**
+     * Vérifie le rejet d'un auteur absent.
+     */
+    @Test
+    void shouldRejectNullAuthorId() {
+        assertInvalidOrigin(APPLICATION_CODE, null);
+    }
+
+    /**
+     * Vérifie le rejet d'un identifiant d'auteur non positif.
+     */
+    @Test
+    void shouldRejectNonPositiveAuthorId() {
+        assertInvalidOrigin(APPLICATION_CODE, 0L);
+        assertInvalidOrigin(APPLICATION_CODE, -1L);
+    }
+
+    /**
+     * Vérifie qu'un code d'application est normalisé
+     * avant enregistrement.
+     */
+    @Test
+    void shouldTrimApplicationCode() {
+        when(feedbackRepository.save(any(Feedback.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Feedback result = feedbackService.createFeedback(
+                new CreateFeedbackRequest("Titre", "Description"),
+                "  MY_POPOTE  ",
+                AUTHOR_ID
+        );
+
+        assertEquals(APPLICATION_CODE, result.getApplicationCode());
+        verify(feedbackRepository).save(any(Feedback.class));
+    }
+
+    /**
      * Vérifie qu'une demande invalide est rejetée
-     * sans aucune interaction avec le repository.
+     * sans interaction avec le repository.
      *
      * @param title titre à tester
      * @param description description à tester
@@ -200,7 +273,34 @@ class FeedbackServiceTest {
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> feedbackService.createFeedback(request)
+                () -> feedbackService.createFeedback(
+                        request, APPLICATION_CODE, AUTHOR_ID
+                )
+        );
+
+        verifyNoInteractions(feedbackRepository);
+    }
+
+    /**
+     * Vérifie le rejet d'une origine ou d'un auteur invalide.
+     *
+     * @param applicationCode code de l'application
+     * @param authorId identifiant de l'auteur
+     */
+    private void assertInvalidOrigin(
+            String applicationCode,
+            Long authorId
+    ) {
+        CreateFeedbackRequest request = new CreateFeedbackRequest(
+                "Titre valide",
+                "Description valide"
+        );
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> feedbackService.createFeedback(
+                        request, applicationCode, authorId
+                )
         );
 
         verifyNoInteractions(feedbackRepository);
