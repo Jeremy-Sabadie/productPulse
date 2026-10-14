@@ -13,15 +13,19 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Service applicatif responsable de la création des feedbacks.
+ * Service métier chargé de la création des feedbacks.
  *
- * <p>Il centralise les règles de validation et délègue
- * exclusivement la persistance au repository.</p>
+ * <p>Valide les données avant leur enregistrement
+ * et attribue l'horodatage côté serveur.</p>
+ *
+ * <p>L'application et l'auteur doivent provenir
+ * d'une couche d'authentification fiable.</p>
  */
 @Service
 public class FeedbackService {
 
     private static final int MAX_TITLE_LENGTH = 150;
+    private static final int MAX_APPLICATION_CODE_LENGTH = 100;
 
     private final FeedbackRepository feedbackRepository;
     private final Clock clock;
@@ -29,8 +33,8 @@ public class FeedbackService {
     /**
      * Initialise le service avec ses dépendances.
      *
-     * @param feedbackRepository repository de persistance
-     * @param clock horloge utilisée pour dater les feedbacks
+     * @param feedbackRepository repository des feedbacks
+     * @param clock horloge utilisée pour l'horodatage
      */
     public FeedbackService(
             FeedbackRepository feedbackRepository,
@@ -45,46 +49,69 @@ public class FeedbackService {
     /**
      * Valide et enregistre un nouveau feedback.
      *
-     * @param request données du feedback
+     * @param request données saisies par l'utilisateur
+     * @param applicationCode code de l'application concernée
+     * @param authorId identifiant de l'utilisateur authentifié
      * @return feedback enregistré
-     * @throws NullPointerException si la demande est null
-     * @throws IllegalArgumentException si les données sont invalides
+     * @throws NullPointerException si la demande est absente
+     * @throws IllegalArgumentException si une donnée est invalide
      */
     @Transactional
-    public Feedback createFeedback(CreateFeedbackRequest request) {
+    public Feedback createFeedback(
+            CreateFeedbackRequest request,
+            String applicationCode,
+            Long authorId
+    ) {
         Objects.requireNonNull(request, "request");
 
         String title = validateRequiredText(
-                request.title(), "Le titre"
+                request.title(), "title"
         );
 
         String description = validateRequiredText(
-                request.description(), "La description"
+                request.description(), "description"
+        );
+
+        String validatedApplicationCode = validateRequiredText(
+                applicationCode, "applicationCode"
         );
 
         if (title.length() > MAX_TITLE_LENGTH) {
             throw new IllegalArgumentException(
-                    "Le titre ne doit pas dépasser 150 caractères"
+                    "title must not exceed 150 characters"
             );
         }
 
-        Instant createdAt = Instant.now(clock);
+        if (validatedApplicationCode.length()
+                > MAX_APPLICATION_CODE_LENGTH) {
+            throw new IllegalArgumentException(
+                    "applicationCode must not exceed 100 characters"
+            );
+        }
+
+        if (authorId == null || authorId <= 0) {
+            throw new IllegalArgumentException(
+                    "authorId must be positive"
+            );
+        }
 
         Feedback feedback = new Feedback(
                 title,
                 description,
-                createdAt
+                validatedApplicationCode,
+                authorId,
+                Instant.now(clock)
         );
 
         return feedbackRepository.save(feedback);
     }
 
     /**
-     * Vérifie qu'un texte obligatoire est renseigné,
-     * puis supprime ses espaces périphériques.
+     * Vérifie qu'un texte obligatoire est renseigné
+     * et supprime les espaces périphériques.
      *
-     * @param value texte à contrôler
-     * @param fieldName nom du champ pour le message d'erreur
+     * @param value texte à valider
+     * @param fieldName nom du champ
      * @return texte normalisé
      */
     private String validateRequiredText(
@@ -93,7 +120,7 @@ public class FeedbackService {
     ) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(
-                    fieldName + " est obligatoire"
+                    fieldName + " must not be blank"
             );
         }
 
