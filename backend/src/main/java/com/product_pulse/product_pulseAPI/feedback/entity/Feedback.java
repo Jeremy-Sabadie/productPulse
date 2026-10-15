@@ -3,6 +3,8 @@ package com.product_pulse.product_pulseAPI.feedback.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -12,14 +14,10 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Entité représentant un feedback enregistré dans ProductPulse.
+ * Entité représentant un retour utilisateur ProductPulse.
  *
- * <p>Chaque feedback appartient à une application et possède
- * un auteur identifié.</p>
- *
- * <p>L'entité ne propose pas de setters publics.
- * La date de création est fournie par le service métier
- * pour garantir des tests déterministes.</p>
+ * Un nouveau retour attend obligatoirement une décision
+ * de modération avant sa publication.
  */
 @Entity
 @Table(name = "feedback")
@@ -44,6 +42,10 @@ public class Feedback {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private FeedbackStatus status;
+
     /**
      * Constructeur requis par JPA.
      */
@@ -51,14 +53,13 @@ public class Feedback {
     }
 
     /**
-     * Construit un feedback avec ses informations obligatoires.
+     * Crée un retour utilisateur en attente de modération.
      *
-     * @param title titre du feedback
-     * @param description description du feedback
-     * @param applicationCode code de l'application concernée
+     * @param title titre du retour
+     * @param description description du retour
+     * @param applicationCode application concernée
      * @param authorId identifiant de l'auteur
      * @param createdAt date de création
-     * @throws NullPointerException si un argument est null
      */
     public Feedback(
             String title,
@@ -78,6 +79,37 @@ public class Feedback {
         this.createdAt = Objects.requireNonNull(
                 createdAt, "createdAt"
         );
+        this.status = FeedbackStatus.PENDING;
+    }
+
+    /**
+     * Approuve un feedback encore en attente.
+     *
+     * @throws IllegalStateException si le feedback
+     *         a déjà été modéré
+     */
+    public void approve() {
+        requirePending();
+        status = FeedbackStatus.APPROVED;
+    }
+
+    /**
+     * Refuse un feedback encore en attente.
+     *
+     * @throws IllegalStateException si le feedback
+     *         a déjà été modéré
+     */
+    public void reject() {
+        requirePending();
+        status = FeedbackStatus.REJECTED;
+    }
+
+    private void requirePending() {
+        if (status != FeedbackStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Feedback has already been moderated"
+            );
+        }
     }
 
     public Long getId() {
@@ -102,5 +134,9 @@ public class Feedback {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public FeedbackStatus getStatus() {
+        return status;
     }
 }

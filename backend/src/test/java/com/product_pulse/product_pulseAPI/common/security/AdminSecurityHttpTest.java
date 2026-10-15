@@ -1,0 +1,206 @@
+
+package com.product_pulse.product_pulseAPI.common.security;
+
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
+import com.product_pulse.product_pulseAPI.feedback.service.FeedbackModerationService;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.Date;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+/**
+ * Vérifie les autorisations HTTP avec de véritables JWT RS256.
+ *
+ * Les utilisateurs ordinaires ne doivent jamais accéder
+ * aux opérations de modération, même avec un claim role falsifié.
+ */
+@SpringBootTest(properties = "app.admin.user-ids=42")
+@AutoConfigureMockMvc
+@Import(AdminSecurityHttpTest.TestBeans.class)
+class AdminSecurityHttpTest {
+
+    private static final String ISSUER =
+            "https://auth.my-popote.example";
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private KeyPair testKeyPair;
+
+    @Autowired
+    private FeedbackModerationService moderationService;
+
+    @BeforeEach
+    void resetModerationService() {
+        clearInvocations(moderationService);
+    }
+
+    @Test
+    void shouldRejectUnauthenticatedModeration() throws Exception {
+        mockMvc.perform(patch("/api/admin/feedback/1/approve"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(patch("/api/admin/feedback/1/reject"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(moderationService);
+    }
+
+    @Test
+    void shouldRejectOrdinaryUserEvenWithAdminClaim()
+            throws Exception {
+
+        String token = signedToken("99", true);
+
+        mockMvc.perform(patch("/api/admin/feedback/1/approve")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(patch("/api/admin/feedback/1/reject")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(moderationService);
+    }
+
+    @Test
+    void shouldAllowAdministratorToApprove() throws Exception {
+        Feedback feedback = feedback();
+        feedback.approve();
+
+        when(moderationService.approve(1L)).thenReturn(feedback);
+
+        mockMvc.perform(patch("/api/admin/feedback/1/approve")
+                        .header(
+                                "Authorization",
+                                "Bearer " + signedToken("42", false)
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"));
+
+        verify(moderationService).approve(1L);
+    }
+
+    @Test
+    void shouldAllowAdministratorToReject() throws Exception {
+        Feedback feedback = feedback();
+        feedback.reject();
+
+        when(moderationService.reject(1L)).thenReturn(feedback);
+
+        mockMvc.perform(patch("/api/admin/feedback/1/reject")
+                        .header(
+                                "Authorization",
+                                "Bearer " + signedToken("42", false)
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"));
+
+        verify(moderationService).reject(1L);
+    }
+
+    private Feedback feedback() {
+        return new Feedback(
+                "Suggestion",
+                "Amélioration",
+                "MY_POPOTE",
+                42L,
+                Instant.parse("2026-10-15T12:00:00Z")
+        );
+    }
+
+    private String signedToken(
+            String subject,
+            boolean forgedAdminClaim
+    ) throws Exception {
+
+        Instant now = Instant.now();
+
+        JWTClaimsSet.Builder claims = new JWTClaimsSet.Builder()
+                .subject(subject)
+                .issuer(ISSUER)
+                .audience("productpulse")
+                .issueTime(Date.from(now))
+                .expirationTime(Date.from(now.plusSeconds(3600)));
+
+        if (forgedAdminClaim) {
+            claims.claim("role", "ADMIN");
+        }
+
+        SignedJWT token = new SignedJWT(
+                new JWSHeader(JWSAlgorithm.RS256),
+                claims.build()
+        );
+
+        token.sign(new RSASSASigner(testKeyPair.getPrivate()));
+
+        return token.serialize();
+    }
+
+    /**
+     * Fournit les dépendances cryptographiques de test.
+     */
+    @TestConfiguration
+    static class TestBeans {
+
+        @Bean
+        KeyPair adminTestKeyPair() throws Exception {
+            KeyPairGenerator generator =
+                    KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            return generator.generateKeyPair();
+        }
+
+        @Bean
+        @Primary
+        JwtDecoder adminTestJwtDecoder(
+                KeyPair adminTestKeyPair
+        ) throws Exception {
+
+            String encoded = Base64.getEncoder()
+                    .encodeToString(
+                            adminTestKeyPair.getPublic().getEncoded()
+                    );
+
+            String pem = "-----BEGIN PUBLIC KEY-----\n"
+                    + encoded
+                    + "\n-----END PUBLIC KEY-----";
+
+            return new JwtDecoderConfig().jwtDecoder(
+                    pem,
+                    ISSUER,
+                    "productpulse"
+            );
+        }
+
+        @Bean
+        @Primary
+        FeedbackModerationService adminTestModerationService() {
+            return mock(FeedbackModerationService.class);
+        }
+    }
+}
