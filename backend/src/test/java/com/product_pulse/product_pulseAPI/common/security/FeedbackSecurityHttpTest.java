@@ -3,8 +3,8 @@ package com.product_pulse.product_pulseAPI.common.security;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -12,10 +12,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Vérifie la protection HTTP de l'API ProductPulse.
- *
- * Les endpoints restent inaccessibles tant que
- * l'authentification JWT fiable n'est pas configurée.
+ * Vérifie le refus des requêtes HTTP non authentifiées
+ * sur l'API ProductPulse.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,19 +32,18 @@ class FeedbackSecurityHttpTest {
     private MockMvc mockMvc;
 
     /**
-     * Une requête anonyme ne doit jamais créer de feedback.
+     * Refuse la création de feedback sans authentification.
      */
     @Test
     void shouldRejectAnonymousFeedbackCreation() throws Exception {
         mockMvc.perform(post(FEEDBACK_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     /**
-     * Un faux jeton Bearer ne doit pas contourner
-     * la politique de refus par défaut.
+     * Refuse un JWT Bearer malformé.
      */
     @Test
     void shouldRejectFakeBearerToken() throws Exception {
@@ -54,12 +51,11 @@ class FeedbackSecurityHttpTest {
                         .header("Authorization", "Bearer fake.jwt.token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     /**
-     * Un jeton arbitraire ne donne aucun accès
-     * à l'endpoint protégé.
+     * Refuse un jeton arbitraire non vérifiable.
      */
     @Test
     void shouldRejectArbitraryBearerToken() throws Exception {
@@ -67,6 +63,6 @@ class FeedbackSecurityHttpTest {
                         .header("Authorization", "Bearer arbitrary-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_BODY))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 }

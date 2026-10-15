@@ -4,45 +4,52 @@ package com.product_pulse.product_pulseAPI.common.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Configuration de sécurité de l'API ProductPulse.
+ * Configuration de la sécurité HTTP de ProductPulse.
  *
- * <p>L'API est sans session et applique une politique
- * de refus par défaut.</p>
- *
- * <p>L'authentification JWT sera activée uniquement
- * après configuration d'un décodeur fiable.</p>
+ * L'API utilise exclusivement des JWT Bearer vérifiés par
+ * le décodeur RS256. Aucune session HTTP n'est créée.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     /**
-     * Définit les règles de protection HTTP.
+     * Définit les règles d'accès aux endpoints.
      *
-     * @param http configuration de sécurité Spring
-     * @return chaîne des filtres de sécurité
-     * @throws Exception si la configuration échoue
+     * @param http configuration HTTP Spring Security
+     * @return chaîne de filtres de sécurité
+     * @throws Exception en cas d'erreur de configuration
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+                .oauth2ResourceServer(resourceServer ->
+                        resourceServer.jwt(Customizer.withDefaults())
+                )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/feedback"
-                        ).denyAll()
-                        .anyRequest().denyAll());
+                        ).authenticated()
+                        .anyRequest().denyAll()
+                );
 
         return http.build();
     }
