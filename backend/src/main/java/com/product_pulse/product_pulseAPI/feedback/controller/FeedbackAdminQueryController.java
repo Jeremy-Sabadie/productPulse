@@ -1,7 +1,7 @@
 
 package com.product_pulse.product_pulseAPI.feedback.controller;
 
-import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
+import com.product_pulse.product_pulseAPI.feedback.dto.FeedbackResponse;
 import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus;
 import com.product_pulse.product_pulseAPI.feedback.service.FeedbackQueryService;
 
@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Objects;
+
 /**
- * API de consultation des feedbacks pour les administrateurs.
+ * API REST de consultation des feedbacks
+ * réservée aux administrateurs.
  */
 @RestController
 @RequestMapping("/api/admin/feedback")
@@ -21,10 +24,17 @@ public class FeedbackAdminQueryController {
 
     private final FeedbackQueryService queryService;
 
+    /**
+     * Initialise le contrôleur.
+     *
+     * @param queryService service de consultation des feedbacks
+     */
     public FeedbackAdminQueryController(
             FeedbackQueryService queryService
     ) {
-        this.queryService = queryService;
+        this.queryService = Objects.requireNonNull(
+                queryService, "queryService"
+        );
     }
 
     /**
@@ -33,16 +43,18 @@ public class FeedbackAdminQueryController {
      * @param status filtre optionnel
      * @param page numéro de page
      * @param size taille de page
-     * @return page de feedbacks
+     * @return page de réponses API
      */
     @GetMapping
-    public ResponseEntity<Page<Feedback>> findAll(
+    public ResponseEntity<Page<FeedbackResponse>> findAll(
             @RequestParam(required = false) FeedbackStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(
-                queryService.findAll(status, page, size)
-        );
+        Page<FeedbackResponse> response = queryService
+                .findAll(status, page, size)
+                .map(FeedbackResponse::from);
+
+        return ResponseEntity.ok(response);
     }
 }

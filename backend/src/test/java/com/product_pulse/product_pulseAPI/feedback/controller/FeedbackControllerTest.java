@@ -2,7 +2,9 @@
 package com.product_pulse.product_pulseAPI.feedback.controller;
 
 import com.product_pulse.product_pulseAPI.feedback.dto.CreateFeedbackRequest;
+import com.product_pulse.product_pulseAPI.feedback.dto.FeedbackResponse;
 import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
+import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus;
 import com.product_pulse.product_pulseAPI.feedback.service.FeedbackService;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -12,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.Instant;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -20,8 +21,8 @@ import static org.mockito.Mockito.*;
 /**
  * Tests unitaires du contrôleur REST des feedbacks.
  *
- * <p>Vérifie la transmission de l'identité authentifiée
- * au service métier et la réponse HTTP produite.</p>
+ * Vérifie l'identité authentifiée et le contrat
+ * de réponse HTTP utilisé par le frontend.
  */
 class FeedbackControllerTest {
 
@@ -38,8 +39,7 @@ class FeedbackControllerTest {
     }
 
     /**
-     * Vérifie qu'un utilisateur authentifié peut créer
-     * un feedback pour l'application My Popote.
+     * Vérifie la création d'un feedback et son DTO.
      */
     @Test
     void shouldCreateFeedbackForAuthenticatedUser() {
@@ -62,17 +62,41 @@ class FeedbackControllerTest {
                 request, "MY_POPOTE", 42L
         )).thenReturn(feedback);
 
-        ResponseEntity<Map<String, Object>> response =
+        ResponseEntity<FeedbackResponse> response =
                 controller.createFeedback(request, jwt);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("MY_POPOTE", response.getBody().get("applicationCode"));
-        assertEquals(42L, response.getBody().get("authorId"));
+
+        FeedbackResponse body = response.getBody();
+        assertNotNull(body);
+
+        assertAll(
+                () -> assertEquals(feedback.getId(), body.id()),
+                () -> assertEquals(
+                        "Nouvelle fonctionnalité",
+                        body.title()
+                ),
+                () -> assertEquals(
+                        "Ajouter un filtre",
+                        body.description()
+                ),
+                () -> assertEquals(
+                        "MY_POPOTE",
+                        body.applicationCode()
+                ),
+                () -> assertEquals(42L, body.authorId()),
+                () -> assertEquals(CREATED_AT, body.createdAt()),
+                () -> assertEquals(
+                        FeedbackStatus.PENDING,
+                        body.status()
+                )
+        );
 
         verify(feedbackService).createFeedback(
                 request, "MY_POPOTE", 42L
         );
+
+        verifyNoMoreInteractions(feedbackService);
     }
 
     /**
