@@ -2,6 +2,7 @@
 package com.product_pulse.product_pulseAPI.feedback.controller;
 
 import com.product_pulse.product_pulseAPI.feedback.dto.CreateFeedbackRequest;
+import com.product_pulse.product_pulseAPI.feedback.dto.FeedbackResponse;
 import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
 import com.product_pulse.product_pulseAPI.feedback.service.FeedbackService;
 
@@ -14,15 +15,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 
 /**
  * API REST de création des feedbacks ProductPulse.
  *
- * <p>L'identifiant de l'auteur est extrait du principal
- * authentifié et n'est jamais accepté depuis le corps HTTP.</p>
+ * L'identifiant de l'auteur provient exclusivement
+ * du JWT authentifié.
  */
 @RestController
 @RequestMapping("/api/feedback")
@@ -47,11 +46,11 @@ public class FeedbackController {
      * Enregistre un feedback pour l'utilisateur authentifié.
      *
      * @param request données du feedback
-     * @param jwt jeton préalablement validé par Spring Security
+     * @param jwt jeton authentifié
      * @return réponse HTTP 201 contenant le feedback créé
      */
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createFeedback(
+    public ResponseEntity<FeedbackResponse> createFeedback(
             @RequestBody CreateFeedbackRequest request,
             @AuthenticationPrincipal Jwt jwt
     ) {
@@ -74,16 +73,8 @@ public class FeedbackController {
                 authorId
         );
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("id", feedback.getId());
-        response.put("title", feedback.getTitle());
-        response.put("description", feedback.getDescription());
-        response.put("applicationCode", feedback.getApplicationCode());
-        response.put("authorId", feedback.getAuthorId());
-        response.put("createdAt", feedback.getCreatedAt());
-
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(response);
+                .body(FeedbackResponse.from(feedback));
     }
 }

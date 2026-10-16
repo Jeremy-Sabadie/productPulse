@@ -8,6 +8,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
 import com.product_pulse.product_pulseAPI.feedback.service.FeedbackModerationService;
+import com.product_pulse.product_pulseAPI.feedback.service.FeedbackQueryService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -26,16 +29,20 @@ import java.security.KeyPairGenerator;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Vérifie les autorisations HTTP avec de véritables JWT RS256.
+ * Tests HTTP de sécurité de l'administration ProductPulse.
  *
- * Les utilisateurs ordinaires ne doivent jamais accéder
- * aux opérations de modération, même avec un claim role falsifié.
+ * Vérifie les accès aux opérations de modération
+ * et à la consultation des feedbacks avec des JWT RS256.
+ *
+ * Les rôles déclarés dans le JWT ne donnent aucun privilège.
  */
 @SpringBootTest(properties = "app.admin.user-ids=42")
 @AutoConfigureMockMvc
@@ -54,9 +61,12 @@ class AdminSecurityHttpTest {
     @Autowired
     private FeedbackModerationService moderationService;
 
+    @Autowired
+    private FeedbackQueryService queryService;
+
     @BeforeEach
-    void resetModerationService() {
-        clearInvocations(moderationService);
+    void resetServiceInteractions() {
+        clearInvocations(moderationService, queryService);
     }
 
     @Test
@@ -123,6 +133,60 @@ class AdminSecurityHttpTest {
         verify(moderationService).reject(1L);
     }
 
+    @Test
+    void shouldRejectUnauthenticatedFeedbackListing()
+            throws Exception {
+
+        mockMvc.perform(get("/api/admin/feedback"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(queryService);
+    }
+
+    @Test
+    void shouldRejectOrdinaryUserFeedbackListing()
+            throws Exception {
+
+        String token = signedToken("99", true);
+
+        mockMvc.perform(get("/api/admin/feedback")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(queryService);
+    }
+
+    @Test
+    void shouldAllowAdministratorToListFeedbacks()
+            throws Exception {
+
+        Feedback feedback = feedback();
+
+        Page<Feedback> result =
+                new PageImpl<>(List.of(feedback));
+
+        when(queryService.findAll(null, 0, 10))
+                .thenReturn(result);
+
+        mockMvc.perform(get("/api/admin/feedback")
+                        .header(
+                                "Authorization",
+                                "Bearer " + signedToken("42", false)
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(
+                        jsonPath("$.content[0].title")
+                                .value("Suggestion")
+                )
+                .andExpect(
+                        jsonPath("$.content[0].status")
+                                .value("PENDING")
+                );
+
+        verify(queryService).findAll(null, 0, 10);
+    }
+
     private Feedback feedback() {
         return new Feedback(
                 "Suggestion",
@@ -162,7 +226,8 @@ class AdminSecurityHttpTest {
     }
 
     /**
-     * Fournit les dépendances cryptographiques de test.
+     * Fournit les dépendances cryptographiques et les services
+     * simulés pour les tests de sécurité HTTP.
      */
     @TestConfiguration
     static class TestBeans {
@@ -171,7 +236,9 @@ class AdminSecurityHttpTest {
         KeyPair adminTestKeyPair() throws Exception {
             KeyPairGenerator generator =
                     KeyPairGenerator.getInstance("RSA");
+
             generator.initialize(2048);
+
             return generator.generateKeyPair();
         }
 
@@ -201,6 +268,12 @@ class AdminSecurityHttpTest {
         @Primary
         FeedbackModerationService adminTestModerationService() {
             return mock(FeedbackModerationService.class);
+        }
+
+        @Bean
+        @Primary
+        FeedbackQueryService adminTestQueryService() {
+            return mock(FeedbackQueryService.class);
         }
     }
 }

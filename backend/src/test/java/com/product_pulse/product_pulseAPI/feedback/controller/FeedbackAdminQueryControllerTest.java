@@ -1,6 +1,7 @@
 
 package com.product_pulse.product_pulseAPI.feedback.controller;
 
+import com.product_pulse.product_pulseAPI.feedback.dto.FeedbackResponse;
 import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
 import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus;
 import com.product_pulse.product_pulseAPI.feedback.service.FeedbackQueryService;
@@ -18,6 +19,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests du contrat REST de consultation administrateur.
+ *
+ * Vérifie la conversion des entités en DTO,
+ * le filtrage et la pagination.
+ */
 class FeedbackAdminQueryControllerTest {
 
     private FeedbackQueryService queryService;
@@ -39,11 +46,40 @@ class FeedbackAdminQueryControllerTest {
         when(queryService.findAll(null, 0, 10))
                 .thenReturn(expected);
 
-        ResponseEntity<Page<Feedback>> response =
+        ResponseEntity<Page<FeedbackResponse>> response =
                 controller.findAll(null, 0, 10);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(expected, response.getBody());
+
+        Page<FeedbackResponse> body = response.getBody();
+        assertNotNull(body);
+
+        assertEquals(1, body.getTotalElements());
+        assertEquals(1, body.getContent().size());
+
+        FeedbackResponse item = body.getContent().getFirst();
+
+        assertAll(
+                () -> assertEquals(feedback.getId(), item.id()),
+                () -> assertEquals("Suggestion", item.title()),
+                () -> assertEquals(
+                        "Amélioration de My Popote",
+                        item.description()
+                ),
+                () -> assertEquals(
+                        "MY_POPOTE",
+                        item.applicationCode()
+                ),
+                () -> assertEquals(42L, item.authorId()),
+                () -> assertEquals(
+                        feedback.getCreatedAt(),
+                        item.createdAt()
+                ),
+                () -> assertEquals(
+                        FeedbackStatus.PENDING,
+                        item.status()
+                )
+        );
 
         verify(queryService).findAll(null, 0, 10);
         verifyNoMoreInteractions(queryService);
@@ -56,11 +92,15 @@ class FeedbackAdminQueryControllerTest {
         when(queryService.findAll(FeedbackStatus.PENDING, 1, 20))
                 .thenReturn(expected);
 
-        ResponseEntity<Page<Feedback>> response =
+        ResponseEntity<Page<FeedbackResponse>> response =
                 controller.findAll(FeedbackStatus.PENDING, 1, 20);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertSame(expected, response.getBody());
+
+        Page<FeedbackResponse> body = response.getBody();
+        assertNotNull(body);
+        assertTrue(body.isEmpty());
+        assertEquals(0, body.getTotalElements());
 
         verify(queryService).findAll(
                 FeedbackStatus.PENDING,
