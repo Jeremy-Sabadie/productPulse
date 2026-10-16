@@ -1,0 +1,182 @@
+
+<div class="dashboard">
+  <aside class="sidebar" aria-label="Navigation latérale">
+    <div class="brand">
+      <span class="brand-symbol" aria-hidden="true">
+        P<span class="brand-dot">.</span>
+      </span>
+      <span class="brand-name">ProductPulse</span>
+    </div>
+
+    <p class="workspace-label">ESPACE DE TRAVAIL</p>
+
+    <nav aria-label="Navigation principale">
+      <a class="nav-link active" href="/admin/feedback" aria-current="page">
+        <span class="nav-icon" aria-hidden="true">▣</span>
+        <span>Feedbacks</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="environment-dot" aria-hidden="true"></span>
+      Administration
+    </div>
+  </aside>
+
+  <div class="mobile-header">
+    <div class="mobile-brand">
+      <span class="mobile-brand-symbol" aria-hidden="true">P.</span>
+      <span>ProductPulse</span>
+    </div>
+    <span class="mobile-context">ADMIN</span>
+  </div>
+
+  <main class="main-content">
+    <header class="topbar">
+      <span class="breadcrumb">
+        Espace de travail <span>/</span> Feedbacks
+      </span>
+      <span class="topbar-badge">ADMINISTRATION</span>
+    </header>
+
+    <div class="page-content">
+      <div class="page-heading">
+        <div class="heading-copy">
+          <p class="eyebrow">MODÉRATION DES RETOURS</p>
+          <h1>Gestion des feedbacks</h1>
+          <p class="subtitle">
+            Examinez, qualifiez et modérez les retours de vos utilisateurs.
+          </p>
+        </div>
+
+        <div class="count-card" aria-label="Nombre de retours en attente">
+          <span class="count-number">
+            {{ totalElements() === null ? '—' : totalElements() }}
+          </span>
+          <span class="count-label">retours en attente</span>
+        </div>
+      </div>
+
+      <section class="feedback-section" aria-label="Liste des feedbacks">
+        <div class="section-header">
+          <div class="section-title">
+            <span class="section-indicator" aria-hidden="true"></span>
+            <h2>À examiner</h2>
+            <span class="section-count">
+              {{ totalElements() === null ? '—' : totalElements() }}
+            </span>
+          </div>
+          <span class="section-description">File de modération</span>
+        </div>
+
+        @if (loading()) {
+          <div class="loading-state" role="status">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <p>Chargement des feedbacks…</p>
+          </div>
+        } @else if (error()) {
+          <div class="error-state" role="alert">
+            <div class="error-symbol" aria-hidden="true">!</div>
+            <div class="error-content">
+              <h3>Les retours sont momentanément indisponibles</h3>
+              <p>{{ error() }}</p>
+              <button
+                type="button"
+                class="retry-button"
+                (click)="loadFeedbacks(currentPage())"
+              >
+                Réessayer
+              </button>
+            </div>
+          </div>
+        } @else {
+          @if (actionError()) {
+            <p class="action-error" role="alert">{{ actionError() }}</p>
+          }
+
+          @if (feedbacks().length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon" aria-hidden="true">✓</div>
+              <h3>Aucun feedback en attente</h3>
+              <p>Tous les retours ont été examinés pour le moment.</p>
+            </div>
+          } @else {
+            <div class="feedback-list">
+              @for (feedback of feedbacks(); track feedback.id) {
+                <article class="feedback-card">
+                  <div class="feedback-topline">
+                    <span class="feedback-id">#{{ feedback.id }}</span>
+                    <span class="status-badge">
+                      <span class="status-dot" aria-hidden="true"></span>
+                      En attente
+                    </span>
+                  </div>
+
+                  <h3>{{ feedback.title }}</h3>
+                  <p class="feedback-description">
+                    {{ feedback.description }}
+                  </p>
+
+                  <div class="feedback-metadata">
+                    <span class="app-tag">
+                      {{ feedback.applicationCode }}
+                    </span>
+                    <span class="metadata-separator" aria-hidden="true">·</span>
+                    <span>Utilisateur #{{ feedback.authorId }}</span>
+                    <span class="metadata-separator" aria-hidden="true">·</span>
+                    <time [attr.datetime]="feedback.createdAt">
+                      {{ feedback.createdAt | date:'dd/MM/yyyy' }}
+                    </time>
+                  </div>
+
+                  <div class="feedback-actions">
+                    <button
+                      type="button"
+                      class="btn-reject"
+                      [disabled]="processingId() !== null || loading()"
+                      (click)="reject(feedback.id)"
+                    >
+                      Rejeter
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-approve"
+                      [disabled]="processingId() !== null || loading()"
+                      (click)="approve(feedback.id)"
+                    >
+                      Approuver
+                    </button>
+                  </div>
+                </article>
+              }
+            </div>
+          }
+        }
+      </section>
+
+      @if (totalPages() > 1 && !error()) {
+        <nav class="pagination" aria-label="Pagination des feedbacks">
+          <button
+            type="button"
+            [disabled]="currentPage() === 0 || loading()"
+            (click)="previousPage()"
+          >
+            Précédent
+          </button>
+
+          <span>
+            Page {{ currentPage() + 1 }} sur {{ totalPages() }}
+          </span>
+
+          <button
+            type="button"
+            [disabled]="currentPage() + 1 >= totalPages() || loading()"
+            (click)="nextPage()"
+          >
+            Suivant
+          </button>
+        </nav>
+      }
+    </div>
+  </main>
+</div>
