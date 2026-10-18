@@ -1,3 +1,10 @@
 
 # Secrets locaux
 .env
+
+.secrets/
+
+# Développement local
+.vscode/
+api-dev.log
+front-dev.log

@@ -1,5 +1,5 @@
-
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   {
@@ -8,7 +8,14 @@ export const routes: Routes = [
     redirectTo: 'admin/feedback',
   },
   {
+    path: 'auth',
+    loadComponent: () =>
+      import('./features/auth/auth-page')
+        .then((module) => module.AuthPage),
+  },
+  {
     path: 'admin/feedback',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/admin/admin-dashboard/admin-dashboard')
         .then((module) => module.AdminDashboard),

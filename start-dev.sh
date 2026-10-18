@@ -2,54 +2,78 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Corriger les conflits de bibliothèques avec VS Code Snap
+# Éviter les conflits avec les bibliothèques VS Code Snap
 unset GTK_PATH GIO_MODULE_DIR LD_LIBRARY_PATH LD_PRELOAD
 
-# Se placer à la racine du projet
 cd "$(dirname "$(realpath "$0")")"
 PROJECT_DIR="$PWD"
 
-echo "=== ProductPulse - Environnement de développement ==="
+API_PID=""
+FRONT_PID=""
 
-# 1. Vérifier les outils nécessaires
-for cmd in docker openssl gnome-terminal npm; do
+cleanup() {
+    trap - INT TERM EXIT
+
+    echo ""
+    echo "Arrêt de ProductPulse..."
+
+    if [ -n "$FRONT_PID" ]; then
+        kill "$FRONT_PID" 2>/dev/null || true
+        wait "$FRONT_PID" 2>/dev/null || true
+    fi
+
+    if [ -n "$API_PID" ]; then
+        kill "$API_PID" 2>/dev/null || true
+        wait "$API_PID" 2>/dev/null || true
+    fi
+
+    echo "Processus de développement arrêtés."
+    echo "MariaDB reste disponible dans Docker."
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+echo "=== ProductPulse - Développement local ==="
+
+# 1. Vérifier les outils et les fichiers
+for cmd in docker openssl npm; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "ERREUR : $cmd n'est pas installé."
         exit 1
     fi
 done
 
-if [ ! -f docker-compose.yml ]; then
-    echo "ERREUR : docker-compose.yml introuvable."
-    exit 1
-fi
-
-if [ ! -f backend/mvnw ]; then
-    echo "ERREUR : backend/mvnw introuvable."
-    exit 1
-fi
-
-if [ ! -d frontEnd ]; then
-    echo "ERREUR : dossier frontEnd introuvable."
+if [ ! -f docker-compose.yml ] ||
+   [ ! -f backend/mvnw ] ||
+   [ ! -d frontEnd ]; then
+    echo "ERREUR : structure du projet incomplète."
     exit 1
 fi
 
 chmod +x backend/mvnw
 
-# 2. Protéger les secrets
+# 2. Vérifier la protection des secrets
 touch .gitignore
 
-if ! grep -qxF '.env' .gitignore; then
-    printf '\n# Secrets locaux\n.env\n' >> .gitignore
-fi
+for entry in ".env" ".secrets/"; do
+    if ! grep -qxF "$entry" .gitignore; then
+        printf '\n%s\n' "$entry" >> .gitignore
+    fi
+done
 
 if git ls-files --error-unmatch .env >/dev/null 2>&1; then
-    echo "ERREUR : .env est déjà suivi par Git."
-    echo "Exécute : git rm --cached .env"
+    echo "ERREUR : .env est suivi par Git."
     exit 1
 fi
 
-# 3. Créer les identifiants au premier lancement
+if git ls-files -- .secrets | grep -q .; then
+    echo "ERREUR : une clé du dossier .secrets est suivie par Git."
+    exit 1
+fi
+
+# 3. Conserver ou créer la configuration MariaDB
 if [ ! -f .env ]; then
     echo "Création de la configuration MariaDB..."
 
@@ -58,41 +82,75 @@ if [ ! -f .env ]; then
         printf 'DB_PASSWORD=%s\n' "$(openssl rand -hex 24)"
         printf 'DB_ROOT_PASSWORD=%s\n' "$(openssl rand -hex 24)"
     ) > .env
-
-    echo "Fichier .env créé."
-else
-    echo "Configuration .env existante conservée."
 fi
 
-# 4. Charger les variables d'environnement
 set -a
 source "$PROJECT_DIR/.env"
 set +a
+
+# 4. Charger la clé publique de My Popote en production
+MY_POPOTE_PUBLIC_KEY="$PROJECT_DIR/.secrets/jwt-public.pem"
+
+if [ ! -r "$MY_POPOTE_PUBLIC_KEY" ]; then
+    echo "ERREUR : clé publique My Popote introuvable."
+    exit 1
+fi
+
+export PRODUCTPULSE_JWT_PUBLIC_KEY
+PRODUCTPULSE_JWT_PUBLIC_KEY="$(cat "$MY_POPOTE_PUBLIC_KEY")"
+export PRODUCTPULSE_JWT_ISSUER="my-popote"
+
+echo "JWT RS256 : clé publique chargée."
 
 # 5. Démarrer MariaDB
 echo "Démarrage de MariaDB..."
 docker compose up -d --wait db
 
-echo "MariaDB est prête."
+# 6. Démarrer l'API
+echo "Démarrage de Spring Boot..."
 
-# 6. Démarrer l'API Spring Boot
-echo "Démarrage de l'API..."
+(
+    cd "$PROJECT_DIR/backend"
+    exec ./mvnw spring-boot:run
+) > "$PROJECT_DIR/api-dev.log" 2>&1 &
 
-gnome-terminal \
-    --working-directory="$PROJECT_DIR/backend" \
-    -- bash -c './mvnw spring-boot:run; exec bash'
+API_PID=$!
 
-# 7. Démarrer le frontend Angular
-echo "Démarrage du frontend Angular..."
+# 7. Démarrer Angular
+echo "Démarrage d'Angular..."
 
-gnome-terminal \
-    --working-directory="$PROJECT_DIR/frontEnd" \
-    -- bash -c 'npm start; exec bash'
+(
+    cd "$PROJECT_DIR/frontEnd"
+    exec npm start
+) > "$PROJECT_DIR/front-dev.log" 2>&1 &
+
+FRONT_PID=$!
 
 echo ""
-echo "=== ProductPulse - Démarrage lancé ==="
+echo "=== ProductPulse lancé ==="
 echo "Frontend : http://localhost:4200"
 echo "API      : http://localhost:8080"
 echo "MariaDB  : localhost:3308"
 echo ""
-echo "Vérifie les terminaux pour confirmer le démarrage."
+echo "Logs API     : api-dev.log"
+echo "Logs Angular : front-dev.log"
+echo ""
+echo "Ctrl + C pour arrêter."
+echo ""
+
+# 8. Surveiller les processus
+while true; do
+    if ! kill -0 "$API_PID" 2>/dev/null; then
+        echo "ERREUR : le processus API s'est arrêté."
+        tail -n 25 "$PROJECT_DIR/api-dev.log"
+        exit 1
+    fi
+
+    if ! kill -0 "$FRONT_PID" 2>/dev/null; then
+        echo "ERREUR : le processus Angular s'est arrêté."
+        tail -n 25 "$PROJECT_DIR/front-dev.log"
+        exit 1
+    fi
+
+    sleep 2
+done
