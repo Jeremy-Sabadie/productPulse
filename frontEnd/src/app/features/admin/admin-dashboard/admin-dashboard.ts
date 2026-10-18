@@ -1,10 +1,15 @@
-
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 
-import { Feedback, FeedbackPage } from '../models/feedback.model';
+import {
+  Feedback,
+  FeedbackPage,
+  FeedbackStatus,
+} from '../models/feedback.model';
 import { AdminFeedbackService } from '../services/admin-feedback.service';
+
+type FeedbackFilter = FeedbackStatus | null;
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -25,15 +30,35 @@ export class AdminDashboard implements OnInit {
   readonly totalPages = signal(0);
   readonly totalElements = signal<number | null>(null);
 
+  readonly selectedStatus = signal<FeedbackFilter>('PENDING');
+
+  readonly filters: {
+    label: string;
+    value: FeedbackFilter;
+  }[] = [
+    { label: 'Tous', value: null },
+    { label: 'En attente', value: 'PENDING' },
+    { label: 'Approuvés', value: 'APPROVED' },
+    { label: 'Rejetés', value: 'REJECTED' },
+  ];
+
   ngOnInit(): void {
     this.loadFeedbacks();
   }
 
-  /**
-   * Charge une page de feedbacks en attente.
-   *
-   * @param page Numéro de page, à partir de zéro.
-   */
+  selectStatus(status: FeedbackFilter): void {
+    if (this.loading() || this.processingId() !== null) {
+      return;
+    }
+
+    if (this.selectedStatus() === status) {
+      return;
+    }
+
+    this.selectedStatus.set(status);
+    this.loadFeedbacks(0);
+  }
+
   loadFeedbacks(page = 0): void {
     if (this.loading()) {
       return;
@@ -44,10 +69,20 @@ export class AdminDashboard implements OnInit {
     this.actionError.set('');
 
     this.feedbackService
-      .getFeedbacks(page, 10, 'PENDING')
+      .getFeedbacks(page, 10, this.selectedStatus())
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (response: FeedbackPage) => {
+          if (
+            response.content.length === 0 &&
+            response.totalElements > 0 &&
+            page > 0
+          ) {
+            this.loading.set(false);
+            this.loadFeedbacks(page - 1);
+            return;
+          }
+
           this.feedbacks.set(response.content);
           this.currentPage.set(response.number);
           this.totalPages.set(response.totalPages);
@@ -62,45 +97,26 @@ export class AdminDashboard implements OnInit {
       });
   }
 
-  /**
-   * Approuve un feedback et actualise la liste.
-   *
-   * @param id Identifiant du feedback.
-   */
   approve(id: number): void {
     this.processFeedback(id, 'approve');
   }
 
-  /**
-   * Rejette un feedback et actualise la liste.
-   *
-   * @param id Identifiant du feedback.
-   */
   reject(id: number): void {
     this.processFeedback(id, 'reject');
   }
 
-  /**
-   * Charge la page suivante lorsqu'elle existe.
-   */
   nextPage(): void {
     if (!this.loading() && this.currentPage() + 1 < this.totalPages()) {
       this.loadFeedbacks(this.currentPage() + 1);
     }
   }
 
-  /**
-   * Charge la page précédente lorsqu'elle existe.
-   */
   previousPage(): void {
     if (!this.loading() && this.currentPage() > 0) {
       this.loadFeedbacks(this.currentPage() - 1);
     }
   }
 
-  /**
-   * Exécute une action de modération.
-   */
   private processFeedback(
     id: number,
     action: 'approve' | 'reject',
