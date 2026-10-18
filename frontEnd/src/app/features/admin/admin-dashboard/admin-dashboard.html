@@ -1,4 +1,3 @@
-
 <div class="dashboard">
   <aside class="sidebar" aria-label="Navigation latérale">
     <div class="brand">
@@ -49,11 +48,13 @@
           </p>
         </div>
 
-        <div class="count-card" aria-label="Nombre de retours en attente">
+        <div class="count-card">
           <span class="count-number">
             {{ totalElements() === null ? '—' : totalElements() }}
           </span>
-          <span class="count-label">retours en attente</span>
+          <span class="count-label">
+            retours correspondant au filtre
+          </span>
         </div>
       </div>
 
@@ -61,12 +62,31 @@
         <div class="section-header">
           <div class="section-title">
             <span class="section-indicator" aria-hidden="true"></span>
-            <h2>À examiner</h2>
+            <h2>Retours utilisateurs</h2>
             <span class="section-count">
               {{ totalElements() === null ? '—' : totalElements() }}
             </span>
           </div>
-          <span class="section-description">File de modération</span>
+          <span class="section-description">Gestion des feedbacks</span>
+        </div>
+
+        <div
+          class="feedback-filters"
+          role="group"
+          aria-label="Filtrer les feedbacks par statut"
+        >
+          @for (filter of filters; track filter.label) {
+            <button
+              type="button"
+              class="filter-button"
+              [class.active]="selectedStatus() === filter.value"
+              [attr.aria-pressed]="selectedStatus() === filter.value"
+              [disabled]="loading() || processingId() !== null"
+              (click)="selectStatus(filter.value)"
+            >
+              {{ filter.label }}
+            </button>
+          }
         </div>
 
         @if (loading()) {
@@ -97,22 +117,40 @@
           @if (feedbacks().length === 0) {
             <div class="empty-state">
               <div class="empty-icon" aria-hidden="true">✓</div>
-              <h3>Aucun feedback en attente</h3>
-              <p>Tous les retours ont été examinés pour le moment.</p>
+              <h3>Aucun feedback trouvé</h3>
+              <p>Aucun retour ne correspond au filtre sélectionné.</p>
             </div>
           } @else {
             <div class="feedback-list">
               @for (feedback of feedbacks(); track feedback.id) {
                 <article class="feedback-card">
                   <div class="feedback-topline">
-                    <span class="feedback-id">#{{ feedback.id }}</span>
-                    <span class="status-badge">
+                    <span class="feedback-id">
+                      #{{ feedback.id }}
+                    </span>
+
+                    <span
+                      class="status-badge"
+                      [class.status-approved]="feedback.status === 'APPROVED'"
+                      [class.status-rejected]="feedback.status === 'REJECTED'"
+                    >
                       <span class="status-dot" aria-hidden="true"></span>
-                      En attente
+                      @switch (feedback.status) {
+                        @case ('APPROVED') {
+                          Approuvé
+                        }
+                        @case ('REJECTED') {
+                          Rejeté
+                        }
+                        @default {
+                          En attente
+                        }
+                      }
                     </span>
                   </div>
 
                   <h3>{{ feedback.title }}</h3>
+
                   <p class="feedback-description">
                     {{ feedback.description }}
                   </p>
@@ -121,32 +159,45 @@
                     <span class="app-tag">
                       {{ feedback.applicationCode }}
                     </span>
-                    <span class="metadata-separator" aria-hidden="true">·</span>
-                    <span>Utilisateur #{{ feedback.authorId }}</span>
-                    <span class="metadata-separator" aria-hidden="true">·</span>
+
+                    <span class="metadata-separator" aria-hidden="true">
+                      ·
+                    </span>
+
+                    <span>
+                      Utilisateur #{{ feedback.authorId }}
+                    </span>
+
+                    <span class="metadata-separator" aria-hidden="true">
+                      ·
+                    </span>
+
                     <time [attr.datetime]="feedback.createdAt">
                       {{ feedback.createdAt | date:'dd/MM/yyyy' }}
                     </time>
                   </div>
 
-                  <div class="feedback-actions">
-                    <button
-                      type="button"
-                      class="btn-reject"
-                      [disabled]="processingId() !== null || loading()"
-                      (click)="reject(feedback.id)"
-                    >
-                      Rejeter
-                    </button>
-                    <button
-                      type="button"
-                      class="btn-approve"
-                      [disabled]="processingId() !== null || loading()"
-                      (click)="approve(feedback.id)"
-                    >
-                      Approuver
-                    </button>
-                  </div>
+                  @if (feedback.status === 'PENDING') {
+                    <div class="feedback-actions">
+                      <button
+                        type="button"
+                        class="btn-reject"
+                        [disabled]="processingId() !== null || loading()"
+                        (click)="reject(feedback.id)"
+                      >
+                        Rejeter
+                      </button>
+
+                      <button
+                        type="button"
+                        class="btn-approve"
+                        [disabled]="processingId() !== null || loading()"
+                        (click)="approve(feedback.id)"
+                      >
+                        Approuver
+                      </button>
+                    </div>
+                  }
                 </article>
               }
             </div>
