@@ -18,6 +18,8 @@ describe('authInterceptor', () => {
   let auth: AuthService;
 
   beforeEach(() => {
+    sessionStorage.clear();
+
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
@@ -32,6 +34,7 @@ describe('authInterceptor', () => {
 
   afterEach(() => {
     httpMock.verify();
+    sessionStorage.clear();
   });
 
   it('adds the JWT to ProductPulse API requests', () => {

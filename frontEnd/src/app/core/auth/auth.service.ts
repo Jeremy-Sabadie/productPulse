@@ -4,17 +4,17 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class AuthService {
-  private accessToken: string | null = null;
+  private readonly storageKey = 'productpulse.accessToken';
 
   getAccessToken(): string | null {
-    return this.accessToken;
+    return sessionStorage.getItem(this.storageKey);
   }
 
   setAccessToken(token: string): void {
-    this.accessToken = token;
+    sessionStorage.setItem(this.storageKey, token);
   }
 
   clearAccessToken(): void {
-    this.accessToken = null;
+    sessionStorage.removeItem(this.storageKey);
   }
 }
