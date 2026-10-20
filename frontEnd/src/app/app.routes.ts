@@ -14,6 +14,13 @@ export const routes: Routes = [
         .then((module) => module.AuthPage),
   },
   {
+    path: 'feedback/new',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/feedback/feedback-form/feedback-form')
+        .then((module) => module.FeedbackForm),
+  },
+  {
     path: 'admin/feedback',
     canActivate: [authGuard],
     loadComponent: () =>
