@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 
 import { FeedbackForm } from './feedback-form';
 import { FeedbackService } from '../services/feedback.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 describe('FeedbackForm', () => {
   const feedbackServiceMock = {
@@ -17,6 +18,11 @@ describe('FeedbackForm', () => {
     await TestBed.configureTestingModule({
       imports: [FeedbackForm],
       providers: [
+        { provide: NotificationService, useValue: {
+          feedbackSubmitted: vi.fn().mockResolvedValue(undefined),
+          confirm: vi.fn().mockResolvedValue(true),
+          error: vi.fn().mockResolvedValue(undefined)
+        } },
         {
           provide: FeedbackService,
           useValue: feedbackServiceMock,
@@ -56,9 +62,7 @@ describe('FeedbackForm', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const form = fixture.debugElement.query(By.directive(NgForm));
-    form.triggerEventHandler('ngSubmit', null);
-
+    await component.submit();
     fixture.detectChanges();
 
     expect(feedbackServiceMock.createFeedback).toHaveBeenCalledWith({
@@ -66,6 +70,6 @@ describe('FeedbackForm', () => {
       description: 'Un ingrédient apparaît deux fois.',
     });
 
-    expect(fixture.nativeElement.textContent).toContain('Avis envoyé');
+    expect(fixture.nativeElement.textContent).toContain('Avis envoyé ! Merci pour votre retour.');
   });
 });

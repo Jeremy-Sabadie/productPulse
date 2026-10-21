@@ -14,8 +14,8 @@
     <p role="alert">{{ error() }}</p>
   }
 
-  <form (ngSubmit)="submit()">
-    <label for="title">Titre</label>
+  <form #feedbackForm="ngForm" (ngSubmit)="submit()">
+    <label for="title">Titre *</label>
     <input
       id="title"
       name="title"
@@ -25,7 +25,7 @@
       maxlength="150"
     />
 
-    <label for="description">Description</label>
+    <label for="description">Description *</label>
     <textarea
       id="description"
       name="description"
@@ -34,7 +34,7 @@
       required
     ></textarea>
 
-    <button type="submit" [disabled]="sending()">
+    <button type="submit" [disabled]="sending() || feedbackForm.invalid">
       {{ sending() ? 'Envoi en cours...' : 'Envoyer mon avis' }}
     </button>
   </form>
