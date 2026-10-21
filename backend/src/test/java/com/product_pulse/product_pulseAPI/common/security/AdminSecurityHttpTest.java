@@ -9,6 +9,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
 import com.product_pulse.product_pulseAPI.feedback.service.FeedbackModerationService;
 import com.product_pulse.product_pulseAPI.feedback.service.FeedbackQueryService;
+import com.product_pulse.product_pulseAPI.feedback.repository.FeedbackVoteRepository;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,9 +65,12 @@ class AdminSecurityHttpTest {
     @Autowired
     private FeedbackQueryService queryService;
 
+    @Autowired
+    private FeedbackVoteRepository voteRepository;
+
     @BeforeEach
     void resetServiceInteractions() {
-        clearInvocations(moderationService, queryService);
+        clearInvocations(moderationService, queryService, voteRepository);
     }
 
     @Test
@@ -258,6 +262,38 @@ class AdminSecurityHttpTest {
         );
     }
 
+
+    @Test
+    void shouldRejectUnauthenticatedVoteCount() throws Exception {
+        mockMvc.perform(get("/api/admin/feedback/1/votes/count"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(voteRepository);
+    }
+
+    @Test
+    void shouldRejectOrdinaryUserVoteCount() throws Exception {
+        mockMvc.perform(get("/api/admin/feedback/1/votes/count")
+                        .header("Authorization",
+                                "Bearer " + signedToken("99", true)))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(voteRepository);
+    }
+
+    @Test
+    void shouldAllowAdministratorVoteCount() throws Exception {
+        when(voteRepository.countByFeedbackId(1L)).thenReturn(3L);
+
+        mockMvc.perform(get("/api/admin/feedback/1/votes/count")
+                        .header("Authorization",
+                                "Bearer " + signedToken("42", false)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("3"));
+
+        verify(voteRepository).countByFeedbackId(1L);
+    }
+
     private Feedback feedback() {
         return new Feedback(
                 "Suggestion",
@@ -339,6 +375,12 @@ class AdminSecurityHttpTest {
         @Primary
         FeedbackModerationService adminTestModerationService() {
             return mock(FeedbackModerationService.class);
+        }
+
+        @Bean
+        @Primary
+        FeedbackVoteRepository adminTestVoteRepository() {
+            return mock(FeedbackVoteRepository.class);
         }
 
         @Bean

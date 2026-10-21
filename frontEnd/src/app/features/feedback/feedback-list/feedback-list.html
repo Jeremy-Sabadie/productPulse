@@ -25,6 +25,13 @@
           <article class="feedback-card">
             <h2>{{ feedback.title }}</h2>
             <p>{{ feedback.description }}</p>
+            <button
+              type="button"
+              [disabled]="!votesReady() || voting().has(feedback.id)"
+              [attr.aria-pressed]="myVotes().has(feedback.id)"
+              (click)="toggleSupport(feedback.id)">
+              {{ myVotes().has(feedback.id) ? 'Retirer mon soutien' : 'Soutenir' }}
+            </button>
             <time [attr.datetime]="feedback.createdAt">
               {{ feedback.createdAt | date:'dd/MM/yyyy' }}
             </time>

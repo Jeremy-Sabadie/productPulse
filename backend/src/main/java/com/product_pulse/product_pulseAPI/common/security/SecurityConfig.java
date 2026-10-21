@@ -79,6 +79,19 @@ public class SecurityConfig {
                                 "/api/admin/feedback/*/approve",
                                 "/api/admin/feedback/*/reject"
                         ).hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/feedback/*/vote"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/feedback/*/vote"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/feedback/my-votes"
+                        ).authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/admin/feedback/*/votes/count").hasRole("ADMIN")
                         .anyRequest().denyAll()
                 );
 

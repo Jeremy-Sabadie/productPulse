@@ -47,6 +47,18 @@ export class FeedbackService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/feedback';
 
+  getMyVotes(): Observable<number[]> {
+    return this.http.get<number[]>(`${this.apiUrl}/my-votes`);
+  }
+
+  support(id: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}/vote`, null);
+  }
+
+  removeSupport(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/vote`);
+  }
+
   createFeedback(
     feedback: CreateFeedbackRequest,
   ): Observable<FeedbackResponse> {

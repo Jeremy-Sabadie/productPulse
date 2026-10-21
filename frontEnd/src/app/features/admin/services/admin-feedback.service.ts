@@ -46,6 +46,10 @@ export class AdminFeedbackService {
    *
    * @param id Identifiant du feedback.
    */
+  getVoteCount(id: number): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/${id}/votes/count`);
+  }
+
   approve(id: number): Observable<Feedback> {
     return this.http.patch<Feedback>(
       `${this.apiUrl}/${id}/approve`,

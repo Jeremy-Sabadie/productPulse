@@ -33,7 +33,12 @@ class FeedbackAdminQueryControllerTest {
     @BeforeEach
     void setUp() {
         queryService = mock(FeedbackQueryService.class);
-        controller = new FeedbackAdminQueryController(queryService);
+        controller = new FeedbackAdminQueryController(
+                queryService,
+                org.mockito.Mockito.mock(
+                    com.product_pulse.product_pulseAPI.feedback.repository.FeedbackVoteRepository.class
+                )
+        );
     }
 
     @Test
