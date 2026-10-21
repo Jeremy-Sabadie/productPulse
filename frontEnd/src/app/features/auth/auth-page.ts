@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -34,6 +35,7 @@ import { AuthService } from '../../core/auth/auth.service';
 export class AuthPage implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
 
   private readonly myPopoteOrigin = 'http://localhost:4201';
   private nonce: string | null = null;
@@ -55,9 +57,24 @@ export class AuthPage implements OnInit, OnDestroy {
     }
 
     this.completed = true;
+    this.message = 'Vérification de vos droits...';
     this.auth.setAccessToken(event.data.accessToken);
 
-    void this.router.navigate(['/admin/feedback']);
+    this.http.get<{ role: 'ADMIN' | 'USER' }>('/api/auth/me')
+      .subscribe({
+        next: (response) => {
+          const destination = response.role === 'ADMIN'
+            ? '/admin/feedback'
+            : '/feedback/new';
+
+          void this.router.navigateByUrl(destination);
+        },
+        error: () => {
+          this.auth.clearAccessToken();
+          this.completed = false;
+          this.message = 'Connexion impossible. Veuillez réessayer.';
+        },
+      });
   };
 
   ngOnInit(): void {

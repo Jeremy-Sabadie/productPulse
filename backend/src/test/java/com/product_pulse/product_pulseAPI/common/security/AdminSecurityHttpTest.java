@@ -187,6 +187,28 @@ class AdminSecurityHttpTest {
         verify(queryService).findAll(null, 0, 10);
     }
 
+    @Test
+    void shouldRejectUnauthenticatedRoleLookup() throws Exception {
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturnAdminRoleForAdministrator() throws Exception {
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + signedToken("42", false)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+    }
+
+    @Test
+    void shouldReturnUserRoleEvenWithForgedAdminClaim() throws Exception {
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + signedToken("99", true)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("USER"));
+    }
+
     private Feedback feedback() {
         return new Feedback(
                 "Suggestion",

@@ -59,6 +59,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/auth/me"
+                        ).authenticated()
+                        .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/feedback"
                         ).authenticated()
