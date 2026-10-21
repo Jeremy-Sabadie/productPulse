@@ -63,6 +63,10 @@ public class SecurityConfig {
                                 "/api/auth/me"
                         ).authenticated()
                         .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/feedback"
+                        ).authenticated()
+                        .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/feedback"
                         ).authenticated()
