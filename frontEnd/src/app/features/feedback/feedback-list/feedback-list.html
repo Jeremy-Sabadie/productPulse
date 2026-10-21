@@ -1,0 +1,55 @@
+<section class="feedback-list">
+  <header>
+    <h1>Les avis de la communauté</h1>
+    <p>Découvrez les suggestions et retours publiés sur My Popote.</p>
+    <a href="/feedback/new">Donner mon avis</a>
+  </header>
+
+  @if (loading()) {
+    <p role="status">Chargement des avis...</p>
+  }
+
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+    <button type="button" (click)="loadPage(page()?.number ?? 0)">
+      Réessayer
+    </button>
+  }
+
+  @if (page(); as result) {
+    @if (result.empty) {
+      <p class="empty-state">Aucun avis publié pour le moment.</p>
+    } @else {
+      <div class="feedback-cards">
+        @for (feedback of result.content; track feedback.id) {
+          <article class="feedback-card">
+            <h2>{{ feedback.title }}</h2>
+            <p>{{ feedback.description }}</p>
+            <time [attr.datetime]="feedback.createdAt">
+              {{ feedback.createdAt | date:'dd/MM/yyyy' }}
+            </time>
+          </article>
+        }
+      </div>
+
+      <nav class="pagination" aria-label="Pagination des avis">
+        <button
+          type="button"
+          [disabled]="result.first || loading()"
+          (click)="previousPage()">
+          Précédent
+        </button>
+
+        <span>Page {{ result.number + 1 }} sur {{ result.totalPages }}</span>
+
+        <button
+          type="button"
+          data-testid="next-page"
+          [disabled]="result.last || loading()"
+          (click)="nextPage()">
+          Suivant
+        </button>
+      </nav>
+    }
+  }
+</section>

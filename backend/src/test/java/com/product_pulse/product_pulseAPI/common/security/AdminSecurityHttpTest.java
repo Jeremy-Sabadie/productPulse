@@ -209,6 +209,55 @@ class AdminSecurityHttpTest {
                 .andExpect(jsonPath("$.role").value("USER"));
     }
 
+
+    /**
+     * Interdit la consultation publique sans JWT.
+     */
+    @Test
+    void shouldRejectUnauthenticatedPublicFeedbackListing()
+            throws Exception {
+
+        mockMvc.perform(get("/api/feedback"))
+                .andExpect(status().isUnauthorized());
+
+        verifyNoInteractions(queryService);
+    }
+
+    /**
+     * Autorise un utilisateur classique à consulter uniquement
+     * les feedbacks approuvés par la modération.
+     */
+    @Test
+    void shouldAllowOrdinaryUserToListApprovedFeedbacks()
+            throws Exception {
+
+        Feedback feedback = feedback();
+        feedback.approve();
+
+        when(queryService.findAll(
+                com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus.APPROVED,
+                0,
+                10
+        )).thenReturn(new PageImpl<>(List.of(feedback)));
+
+        mockMvc.perform(get("/api/feedback")
+                        .header(
+                                "Authorization",
+                                "Bearer " + signedToken("99", false)
+                        ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].title").value("Suggestion"))
+                .andExpect(jsonPath("$.content[0].authorId").doesNotExist())
+                .andExpect(jsonPath("$.content[0].status").doesNotExist());
+
+        verify(queryService).findAll(
+                com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus.APPROVED,
+                0,
+                10
+        );
+    }
+
     private Feedback feedback() {
         return new Feedback(
                 "Suggestion",
