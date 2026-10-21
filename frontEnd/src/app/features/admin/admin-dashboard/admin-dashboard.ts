@@ -17,6 +17,8 @@ export class AdminDashboard implements OnInit {
   private readonly feedbackService = inject(AdminFeedbackService);
 
   readonly feedbacks = signal<Feedback[]>([]);
+  readonly view = signal<'PENDING' | 'APPROVED'>('PENDING');
+  readonly voteCounts = signal<Record<number, number>>({});
   readonly loading = signal(false);
   readonly error = signal('');
   readonly actionError = signal('');
@@ -44,11 +46,25 @@ export class AdminDashboard implements OnInit {
     this.actionError.set('');
 
     this.feedbackService
-      .getFeedbacks(page, 10, 'PENDING')
+      .getFeedbacks(page, 10, this.view())
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (response: FeedbackPage) => {
           this.feedbacks.set(response.content);
+          this.voteCounts.set({});
+
+          if (this.view() === 'APPROVED') {
+            for (const feedback of response.content) {
+              this.feedbackService.getVoteCount(feedback.id).subscribe({
+                next: count => this.voteCounts.update(
+                  counts => ({ ...counts, [feedback.id]: count })
+                ),
+                error: () => this.actionError.set(
+                  'Impossible de charger certains compteurs.'
+                ),
+              });
+            }
+          }
           this.currentPage.set(response.number);
           this.totalPages.set(response.totalPages);
           this.totalElements.set(response.totalElements);
@@ -83,6 +99,12 @@ export class AdminDashboard implements OnInit {
   /**
    * Charge la page suivante lorsqu'elle existe.
    */
+  changeView(view: 'PENDING' | 'APPROVED'): void {
+    if (this.loading() || this.view() === view) return;
+    this.view.set(view);
+    this.loadFeedbacks(0);
+  }
+
   nextPage(): void {
     if (!this.loading() && this.currentPage() + 1 < this.totalPages()) {
       this.loadFeedbacks(this.currentPage() + 1);

@@ -44,6 +44,16 @@
         <div class="heading-copy">
           <p class="eyebrow">MODÉRATION DES RETOURS</p>
           <h1>Gestion des feedbacks</h1>
+          <nav aria-label="Filtrer les feedbacks">
+            <button type="button"
+              [attr.aria-pressed]="view() === 'PENDING'"
+              [disabled]="loading()"
+              (click)="changeView('PENDING')">À examiner</button>
+            <button type="button"
+              [attr.aria-pressed]="view() === 'APPROVED'"
+              [disabled]="loading()"
+              (click)="changeView('APPROVED')">Publiés</button>
+          </nav>
           <p class="subtitle">
             Examinez, qualifiez et modérez les retours de vos utilisateurs.
           </p>
@@ -53,7 +63,7 @@
           <span class="count-number">
             {{ totalElements() === null ? '—' : totalElements() }}
           </span>
-          <span class="count-label">retours en attente</span>
+          <span class="count-label">{{ view() === 'PENDING' ? 'retours en attente' : 'retours publiés' }}</span>
         </div>
       </div>
 
@@ -61,12 +71,12 @@
         <div class="section-header">
           <div class="section-title">
             <span class="section-indicator" aria-hidden="true"></span>
-            <h2>À examiner</h2>
+            <h2>{{ view() === 'PENDING' ? 'À examiner' : 'Publiés' }}</h2>
             <span class="section-count">
               {{ totalElements() === null ? '—' : totalElements() }}
             </span>
           </div>
-          <span class="section-description">File de modération</span>
+          <span class="section-description">{{ view() === 'PENDING' ? 'File de modération' : 'Avis approuvés' }}</span>
         </div>
 
         @if (loading()) {
@@ -97,7 +107,8 @@
           @if (feedbacks().length === 0) {
             <div class="empty-state">
               <div class="empty-icon" aria-hidden="true">✓</div>
-              <h3>Aucun feedback en attente</h3>
+              <h3>{{ view() === 'PENDING'
+          ? 'Aucun feedback en attente' : 'Aucun feedback publié' }}</h3>
               <p>Tous les retours ont été examinés pour le moment.</p>
             </div>
           } @else {
@@ -108,7 +119,7 @@
                     <span class="feedback-id">#{{ feedback.id }}</span>
                     <span class="status-badge">
                       <span class="status-dot" aria-hidden="true"></span>
-                      En attente
+                      {{ view() === 'PENDING' ? 'En attente' : 'Publié' }}
                     </span>
                   </div>
 
@@ -129,6 +140,14 @@
                     </time>
                   </div>
 
+                  @if (view() === 'APPROVED') {
+                    <p class="feedback-votes">
+                      Soutiens :
+                      {{ voteCounts()[feedback.id] === undefined
+                        ? '…' : voteCounts()[feedback.id] }}
+                    </p>
+                  }
+                  @if (view() === 'PENDING') {
                   <div class="feedback-actions">
                     <button
                       type="button"
@@ -147,6 +166,7 @@
                       Approuver
                     </button>
                   </div>
+                  }
                 </article>
               }
             </div>

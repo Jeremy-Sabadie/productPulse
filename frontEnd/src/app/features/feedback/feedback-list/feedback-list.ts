@@ -19,10 +19,22 @@ export class FeedbackList implements OnInit {
   readonly page = signal<PublicFeedbackPage | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
+  readonly myVotes = signal<Set<number>>(new Set());
+  readonly voting = signal<Set<number>>(new Set());
+  readonly votesReady = signal(false);
   readonly pageSize = 10;
 
   ngOnInit(): void {
     this.loadPage(0);
+    this.service.getMyVotes().subscribe({
+      next: ids => {
+        this.myVotes.set(new Set(ids));
+        this.votesReady.set(true);
+      },
+      error: () => this.error.set(
+        'Impossible de charger vos soutiens.',
+      ),
+    });
   }
 
   /**
@@ -45,6 +57,37 @@ export class FeedbackList implements OnInit {
           'Impossible de charger les avis. Veuillez réessayer.',
         ),
       });
+  }
+
+
+  toggleSupport(id: number): void {
+    if (!this.votesReady() || this.voting().has(id)) return;
+
+    const alreadySupported = this.myVotes().has(id);
+    this.voting.update(ids => new Set([...ids, id]));
+    this.error.set('');
+
+    const request = alreadySupported
+      ? this.service.removeSupport(id)
+      : this.service.support(id);
+
+    request.pipe(finalize(() => {
+      this.voting.update(ids => {
+        const next = new Set(ids);
+        next.delete(id);
+        return next;
+      });
+    })).subscribe({
+      next: () => this.myVotes.update(ids => {
+        const next = new Set(ids);
+        if (alreadySupported) next.delete(id);
+        else next.add(id);
+        return next;
+      }),
+      error: () => this.error.set(
+        'Impossible de modifier votre soutien.',
+      ),
+    });
   }
 
   nextPage(): void {

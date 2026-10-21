@@ -7,6 +7,7 @@ import { FeedbackService } from '../services/feedback.service';
 describe('FeedbackList', () => {
   it('affiche un avis approuvé', async () => {
     const service = {
+      getMyVotes: vi.fn().mockReturnValue(of([])),
       getApprovedFeedbacks: vi.fn().mockReturnValue(of({
         content: [{
           id: 12,
@@ -35,6 +36,7 @@ describe('FeedbackList', () => {
 
   it('charge la page suivante', async () => {
     const service = {
+      getMyVotes: vi.fn().mockReturnValue(of([])),
       getApprovedFeedbacks: vi.fn().mockReturnValue(of({
         content: [],
         number: 0,
@@ -67,6 +69,7 @@ describe('FeedbackList', () => {
 
   it('affiche une erreur si le chargement échoue', async () => {
     const service = {
+      getMyVotes: vi.fn().mockReturnValue(of([])),
       getApprovedFeedbacks: vi.fn().mockReturnValue(
         throwError(() => new Error('API indisponible')),
       ),
