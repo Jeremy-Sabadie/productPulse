@@ -1,0 +1,41 @@
+<section class="feedback-form">
+  <h1>Donner mon avis</h1>
+  <p>Une idée ou un problème à signaler sur My Popote ?</p>
+
+  <a href="/feedback" class="community-link">
+    Consulter les avis de la communauté
+  </a>
+
+  @if (success()) {
+    <p role="status">Avis envoyé ! Merci pour votre retour.</p>
+  }
+
+  @if (error()) {
+    <p role="alert">{{ error() }}</p>
+  }
+
+  <form #feedbackForm="ngForm" (ngSubmit)="submit()">
+    <label for="title">Titre *</label>
+    <input
+      id="title"
+      name="title"
+      type="text"
+      [(ngModel)]="title"
+      required
+      maxlength="150"
+    />
+
+    <label for="description">Description *</label>
+    <textarea
+      id="description"
+      name="description"
+      [(ngModel)]="description"
+      rows="6"
+      required
+    ></textarea>
+
+    <button type="submit" [disabled]="sending() || feedbackForm.invalid">
+      {{ sending() ? 'Envoi en cours...' : 'Envoyer mon avis' }}
+    </button>
+  </form>
+</section>
