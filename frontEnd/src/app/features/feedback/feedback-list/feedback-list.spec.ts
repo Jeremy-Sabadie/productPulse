@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -16,14 +17,22 @@ describe('FeedbackList', () => {
           applicationCode: 'MY_POPOTE',
           createdAt: '2026-10-21T09:00:00Z',
         }],
-        number: 0, size: 10, totalElements: 1,
-        totalPages: 1, first: true, last: true, empty: false,
+        number: 0,
+        size: 10,
+        totalElements: 1,
+        totalPages: 1,
+        first: true,
+        last: true,
+        empty: false,
       })),
     };
 
     await TestBed.configureTestingModule({
       imports: [FeedbackList],
-      providers: [{ provide: FeedbackService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: FeedbackService, useValue: service },
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(FeedbackList);
@@ -51,7 +60,10 @@ describe('FeedbackList', () => {
 
     await TestBed.configureTestingModule({
       imports: [FeedbackList],
-      providers: [{ provide: FeedbackService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: FeedbackService, useValue: service },
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(FeedbackList);
@@ -63,9 +75,9 @@ describe('FeedbackList', () => {
 
     button.click();
 
-    expect(service.getApprovedFeedbacks).toHaveBeenLastCalledWith(1, 10);
+    expect(service.getApprovedFeedbacks)
+      .toHaveBeenLastCalledWith(1, 10);
   });
-
 
   it('affiche une erreur si le chargement échoue', async () => {
     const service = {
@@ -77,7 +89,10 @@ describe('FeedbackList', () => {
 
     await TestBed.configureTestingModule({
       imports: [FeedbackList],
-      providers: [{ provide: FeedbackService, useValue: service }],
+      providers: [
+        provideRouter([]),
+        { provide: FeedbackService, useValue: service },
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(FeedbackList);
@@ -85,9 +100,7 @@ describe('FeedbackList', () => {
 
     const alert = fixture.nativeElement.querySelector('[role="alert"]');
 
-    expect(alert?.textContent).toContain(
-      'Impossible de charger les avis',
-    );
+    expect(alert?.textContent)
+      .toContain('Impossible de charger les avis');
   });
-
 });

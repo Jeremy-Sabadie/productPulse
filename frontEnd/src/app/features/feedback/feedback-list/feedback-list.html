@@ -2,7 +2,11 @@
   <header>
     <h1>Les avis de la communauté</h1>
     <p>Découvrez les suggestions et retours publiés sur My Popote.</p>
-    <a href="/feedback/new">Donner mon avis</a>
+
+    <nav aria-label="Navigation des avis">
+      <a routerLink="/feedback/new">Donner mon avis</a>
+      <a routerLink="/feedback/mine">Mes avis</a>
+    </nav>
   </header>
 
   @if (loading()) {
@@ -25,6 +29,7 @@
           <article class="feedback-card">
             <h2>{{ feedback.title }}</h2>
             <p>{{ feedback.description }}</p>
+
             <button
               type="button"
               [disabled]="!votesReady() || voting().has(feedback.id)"
@@ -32,6 +37,7 @@
               (click)="toggleSupport(feedback.id)">
               {{ myVotes().has(feedback.id) ? 'Retirer mon soutien' : 'Soutenir' }}
             </button>
+
             <time [attr.datetime]="feedback.createdAt">
               {{ feedback.createdAt | date:'dd/MM/yyyy' }}
             </time>

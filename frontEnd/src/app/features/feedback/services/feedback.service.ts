@@ -40,6 +40,17 @@ export interface PublicFeedbackPage {
   empty: boolean;
 }
 
+
+export interface MyFeedback {
+  id: number;
+  title: string;
+  description: string;
+  applicationCode: string;
+  authorId: number;
+  createdAt: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -90,6 +101,32 @@ export class FeedbackService {
 
     return this.http.get<PublicFeedbackPage>(
       this.apiUrl,
+      { params },
+    );
+  }
+
+
+  /**
+   * Historique personnel : l'auteur est déterminé par le JWT côté API.
+   */
+  getMyFeedbacks(
+    page = 0,
+    size = 10,
+  ): Observable<PublicFeedbackPage & { content: MyFeedback[] }> {
+    if (!Number.isInteger(page) || page < 0) {
+      throw new RangeError('Numéro de page invalide.');
+    }
+
+    if (!Number.isInteger(size) || size < 1 || size > 100) {
+      throw new RangeError('Taille de page invalide.');
+    }
+
+    const params = new HttpParams()
+      .set('page', page)
+      .set('size', size);
+
+    return this.http.get<PublicFeedbackPage & { content: MyFeedback[] }>(
+      `${this.apiUrl}/mine`,
       { params },
     );
   }

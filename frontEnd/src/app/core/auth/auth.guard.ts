@@ -5,7 +5,7 @@ import { catchError, map, of } from 'rxjs';
 
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -13,7 +13,9 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  return router.createUrlTree(['/auth']);
+  return router.createUrlTree(['/auth'], {
+    queryParams: { returnUrl: state.url },
+  });
 };
 
 export const adminGuard: CanActivateFn = () => {
