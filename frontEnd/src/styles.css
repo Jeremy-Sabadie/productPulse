@@ -40,3 +40,153 @@ app-root {
     overflow-x: hidden;
   }
 }
+
+/* ======================================================
+   ProductPulse — Dashboard administrateur (US08 / US14)
+   Complément au design original, sans modifier la sidebar
+   ni les cartes de feedback.
+   ====================================================== */
+
+.admin-toolbar {
+  margin: 0 0 24px;
+  background: #fff;
+  border: 1px solid #e2e6f0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.admin-toolbar-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 22px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.admin-toolbar-heading h2 {
+  margin: 0;
+  color: #202a45;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.admin-toolbar-heading > span {
+  color: #8994ae;
+  font-size: 12px;
+}
+
+.admin-toolbar-content {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 20px 22px;
+}
+
+.admin-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 170px;
+}
+
+.admin-status-group {
+  flex: 1 1 320px;
+}
+
+.admin-filter-label {
+  color: #7784a1;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.admin-status-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  background: #f1f3f9;
+  border-radius: 10px;
+}
+
+.admin-status-tabs button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #687591;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-status-tabs button.is-active {
+  background: #fff;
+  color: #4f46b8;
+  box-shadow: 0 1px 5px rgb(31 41 73 / 10%);
+}
+
+.admin-status-tabs button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.admin-filter-input,
+.admin-filter-select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid #dfe4ee;
+  border-radius: 9px;
+  background: #fff;
+  color: #26334f;
+  font: inherit;
+  font-size: 13px;
+}
+
+.admin-filter-input::placeholder {
+  color: #9aa5bb;
+}
+
+.admin-toolbar button:focus-visible,
+.admin-filter-input:focus-visible,
+.admin-filter-select:focus-visible {
+  outline: 2px solid #625bd5;
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .admin-toolbar-heading,
+  .admin-toolbar-content {
+    padding: 16px;
+  }
+
+  .admin-toolbar-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .admin-filter-group,
+  .admin-status-group {
+    flex: auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-status-tabs button {
+    flex: 1;
+    padding: 10px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-status-tabs button {
+    transition: none;
+  }
+}
