@@ -1,4 +1,3 @@
-
 package com.product_pulse.product_pulseAPI.common.security;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -27,14 +26,6 @@ import java.util.stream.Collectors;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    /**
-     * Configure les autorisations HTTP.
-     *
-     * @param http configuration de sécurité
-     * @param jwtAuthenticationConverter conversion JWT vers authentification
-     * @return chaîne des filtres HTTP
-     * @throws Exception si la configuration échoue
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -64,7 +55,9 @@ public class SecurityConfig {
                         ).authenticated()
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/feedback"
+                                "/api/feedback",
+                                "/api/feedback/mine",
+                                "/api/feedback/my-votes"
                         ).authenticated()
                         .requestMatchers(
                                 HttpMethod.POST,
@@ -89,24 +82,14 @@ public class SecurityConfig {
                         ).authenticated()
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/feedback/my-votes"
-                        ).authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/admin/feedback/*/votes/count").hasRole("ADMIN")
+                                "/api/admin/feedback/*/votes/count"
+                        ).hasRole("ADMIN")
                         .anyRequest().denyAll()
                 );
 
         return http.build();
     }
 
-    /**
-     * Attribue ROLE_ADMIN uniquement aux utilisateurs
-     * autorisés dans la configuration de ProductPulse.
-     *
-     * Aucun rôle fourni par le JWT n'est accepté.
-     *
-     * @param adminUserIds identifiants autorisés, séparés par des virgules
-     * @return convertisseur d'authentification JWT
-     */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter(
             @Value("${app.admin.user-ids:}") String adminUserIds

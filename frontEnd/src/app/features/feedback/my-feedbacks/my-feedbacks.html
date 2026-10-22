@@ -1,0 +1,82 @@
+<main class="history">
+  <header class="history-header">
+    <div>
+      <h1>Mes avis</h1>
+      <p>Retrouvez les suggestions et signalements que vous avez envoyés.</p>
+    </div>
+
+    <nav aria-label="Navigation des avis">
+      <a routerLink="/feedback">Avis publiés</a>
+      <a routerLink="/feedback/new">Donner mon avis</a>
+    </nav>
+  </header>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+    <button type="button" (click)="loadPage(page()?.number ?? 0)">
+      Réessayer
+    </button>
+  }
+
+  @if (loading()) {
+    <p role="status">Chargement de vos avis…</p>
+  }
+
+  @if (page(); as history) {
+    @if (history.content.length === 0 && !loading()) {
+      <div class="empty">
+        <p>Vous n'avez pas encore envoyé d'avis.</p>
+        <a routerLink="/feedback/new">Envoyer mon premier avis</a>
+      </div>
+    } @else {
+      <p class="count">{{ history.totalElements }} avis au total</p>
+
+      <div class="feedbacks">
+        @for (feedback of history.content; track feedback.id) {
+          <article class="feedback-card">
+            <div class="card-heading">
+              <h2>{{ feedback.title }}</h2>
+
+              <span
+                class="status"
+                [class.pending]="feedback.status === 'PENDING'"
+                [class.approved]="feedback.status === 'APPROVED'"
+                [class.rejected]="feedback.status === 'REJECTED'"
+              >
+                {{ statusLabel(feedback.status) }}
+              </span>
+            </div>
+
+            <p>{{ feedback.description }}</p>
+
+            <time [attr.datetime]="feedback.createdAt">
+              Envoyé le {{ feedback.createdAt | date:'dd/MM/yyyy à HH:mm' }}
+            </time>
+          </article>
+        }
+      </div>
+
+      <nav class="pagination" aria-label="Pagination de mes avis">
+        <button
+          type="button"
+          [disabled]="history.first || loading()"
+          (click)="previousPage()"
+        >
+          Précédent
+        </button>
+
+        <span>
+          Page {{ history.number + 1 }} / {{ history.totalPages }}
+        </span>
+
+        <button
+          type="button"
+          [disabled]="history.last || loading()"
+          (click)="nextPage()"
+        >
+          Suivant
+        </button>
+      </nav>
+    }
+  }
+</main>

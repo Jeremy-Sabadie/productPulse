@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { finalize } from 'rxjs';
 import {
@@ -9,7 +10,7 @@ import {
 @Component({
   selector: 'app-feedback-list',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './feedback-list.html',
   styleUrl: './feedback-list.css',
 })

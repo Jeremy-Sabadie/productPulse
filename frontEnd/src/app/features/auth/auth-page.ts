@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
@@ -35,6 +35,7 @@ import { AuthService } from '../../core/auth/auth.service';
 export class AuthPage implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
 
   private readonly myPopoteOrigin = 'http://localhost:4201';
@@ -63,9 +64,17 @@ export class AuthPage implements OnInit, OnDestroy {
     this.http.get<{ role: 'ADMIN' | 'USER' }>('/api/auth/me')
       .subscribe({
         next: (response) => {
-          const destination = response.role === 'ADMIN'
+          const requestedUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+          const fallback = response.role === 'ADMIN'
             ? '/admin/feedback'
             : '/feedback/new';
+
+          const destination =
+            requestedUrl?.startsWith('/') &&
+            !requestedUrl.startsWith('//') &&
+            !requestedUrl.startsWith('/auth')
+              ? requestedUrl
+              : fallback;
 
           void this.router.navigateByUrl(destination);
         },
