@@ -6,13 +6,32 @@ import { Observable } from 'rxjs';
 import {
   Feedback,
   FeedbackPage,
+  FeedbackStatus,
 } from '../models/feedback.model';
 
 /**
- * Centralise les échanges avec l'API d'administration ProductPulse.
+ * Critères de classement disponibles pour le dashboard.
  *
- * L'authentification sera intégrée séparément via un intercepteur HTTP,
- * lorsque le contrat d'authentification My Popote sera disponible.
+ * Ces valeurs correspondent au contrat de l'API backend.
+ * Elles ne doivent pas être modifiées indépendamment du Java.
+ */
+export type AdminFeedbackSort =
+  | 'recent'
+  | 'votes_desc'
+  | 'votes_asc';
+
+/**
+ * Centralise les appels HTTP du dashboard administrateur.
+ *
+ * Responsabilités :
+ * - récupérer les avis filtrés et paginés ;
+ * - récupérer les compteurs de soutiens ;
+ * - approuver ou rejeter les avis.
+ *
+ * Sécurité :
+ * l'API Spring Security reste responsable de la vérification
+ * des droits administrateur. Les filtres Angular ne sont
+ * jamais une protection d'accès.
  */
 @Injectable({
   providedIn: 'root',
@@ -22,34 +41,57 @@ export class AdminFeedbackService {
   private readonly apiUrl = '/api/admin/feedback';
 
   /**
-   * Récupère les feedbacks selon leur statut.
+   * Récupère une page d'avis avec les critères sélectionnés.
    *
-   * @param page Numéro de page, à partir de zéro.
-   * @param size Nombre d'éléments par page.
-   * @param status Statut des feedbacks recherchés.
+   * Le filtrage et le classement sont réalisés côté backend,
+   * avant la pagination.
+   *
+   * @param page Page demandée, à partir de zéro.
+   * @param size Nombre d'avis par page.
+   * @param status Statut de modération.
+   * @param applicationCode Application à filtrer (facultatif).
+   * @param sort Ordre de classement.
    */
   getFeedbacks(
     page = 0,
     size = 10,
-    status = 'PENDING',
+    status: FeedbackStatus = 'PENDING',
+    applicationCode = '',
+    sort: AdminFeedbackSort = 'recent',
   ): Observable<FeedbackPage> {
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('page', page)
       .set('size', size)
-      .set('status', status);
+      .set('status', status)
+      .set('sort', sort);
 
-    return this.http.get<FeedbackPage>(this.apiUrl, { params });
+    // Ne pas envoyer un filtre vide à l'API.
+    const application = applicationCode.trim();
+
+    if (application) {
+      params = params.set('applicationCode', application);
+    }
+
+    return this.http.get<FeedbackPage>(
+      this.apiUrl,
+      { params },
+    );
   }
 
   /**
-   * Approuve un feedback.
+   * Retourne le nombre de soutiens d'un avis.
    *
-   * @param id Identifiant du feedback.
+   * Ce compteur est réservé à l'administration.
    */
   getVoteCount(id: number): Observable<number> {
-    return this.http.get<number>(`${this.apiUrl}/${id}/votes/count`);
+    return this.http.get<number>(
+      `${this.apiUrl}/${id}/votes/count`,
+    );
   }
 
+  /**
+   * Approuve un avis en attente de modération.
+   */
   approve(id: number): Observable<Feedback> {
     return this.http.patch<Feedback>(
       `${this.apiUrl}/${id}/approve`,
@@ -58,9 +100,7 @@ export class AdminFeedbackService {
   }
 
   /**
-   * Rejette un feedback.
-   *
-   * @param id Identifiant du feedback.
+   * Rejette un avis en attente de modération.
    */
   reject(id: number): Observable<Feedback> {
     return this.http.patch<Feedback>(
