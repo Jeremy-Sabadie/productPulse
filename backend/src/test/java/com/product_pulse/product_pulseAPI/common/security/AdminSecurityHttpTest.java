@@ -169,7 +169,7 @@ class AdminSecurityHttpTest {
         Page<Feedback> result =
                 new PageImpl<>(List.of(feedback));
 
-        when(queryService.findAll(null, 0, 10))
+        when(queryService.findAll(null, null, null, "recent", 0, 10))
                 .thenReturn(result);
 
         mockMvc.perform(get("/api/admin/feedback")
@@ -188,7 +188,7 @@ class AdminSecurityHttpTest {
                                 .value("PENDING")
                 );
 
-        verify(queryService).findAll(null, 0, 10);
+        verify(queryService).findAll(null, null, null, "recent", 0, 10);
     }
 
     @Test
