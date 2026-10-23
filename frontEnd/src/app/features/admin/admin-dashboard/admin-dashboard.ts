@@ -223,6 +223,54 @@ export class AdminDashboard implements OnInit {
     this.processFeedback(id, 'reject');
   }
 
+  /**
+   * Crée une issue GitHub à partir d'un feedback.
+   *
+   * Empêche les créations multiples pendant le traitement.
+   * La confirmation évite toute création accidentelle.
+   */
+  createGitHubIssue(feedback: Feedback): void {
+    if (
+      this.processingId() !== null ||
+      this.loading() ||
+      feedback.githubIssueNumber !== null
+    ) {
+      return;
+    }
+
+    if (!window.confirm(
+      `Créer une issue GitHub pour le feedback #${feedback.id} ?`
+    )) {
+      return;
+    }
+
+    this.processingId.set(feedback.id);
+    this.actionError.set('');
+
+    this.feedbackService.createGitHubIssue(feedback.id)
+      .pipe(finalize(() => this.processingId.set(null)))
+      .subscribe({
+        next: issue => {
+          this.feedbacks.update(feedbacks =>
+            feedbacks.map(item =>
+              item.id === feedback.id
+                ? {
+                    ...item,
+                    githubIssueNumber: issue.number,
+                    githubIssueUrl: issue.url,
+                  }
+                : item
+            )
+          );
+        },
+        error: () => {
+          this.actionError.set(
+            'Impossible de créer l’issue GitHub. Vérifiez son existence sur GitHub avant de réessayer.'
+          );
+        },
+      });
+  }
+
   /** Navigation vers la page suivante. */
   nextPage(): void {
     if (

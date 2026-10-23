@@ -50,6 +50,12 @@ public class Feedback {
     @Column(nullable = false, length = 20)
     private FeedbackCategory category;
 
+    @Column(name = "github_issue_number", unique = true)
+    private Long githubIssueNumber;
+
+    @Column(name = "github_issue_url", length = 500)
+    private String githubIssueUrl;
+
     /**
      * Constructeur requis par JPA.
      */
@@ -124,6 +130,37 @@ public class Feedback {
                     "Feedback has already been moderated"
             );
         }
+    }
+
+    public void linkGithubIssue(Long number, String url) {
+        if (githubIssueNumber != null) {
+            throw new IllegalStateException(
+                    "Feedback already linked to a GitHub issue"
+            );
+        }
+
+        if (number == null || number <= 0) {
+            throw new IllegalArgumentException(
+                    "GitHub issue number must be positive"
+            );
+        }
+
+        if (url == null || url.isBlank()) {
+            throw new IllegalArgumentException(
+                    "GitHub issue URL is required"
+            );
+        }
+
+        this.githubIssueNumber = number;
+        this.githubIssueUrl = url;
+    }
+
+    public Long getGithubIssueNumber() {
+        return githubIssueNumber;
+    }
+
+    public String getGithubIssueUrl() {
+        return githubIssueUrl;
     }
 
     public Long getId() {

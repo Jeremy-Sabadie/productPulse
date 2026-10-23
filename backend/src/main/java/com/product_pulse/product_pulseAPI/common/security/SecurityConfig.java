@@ -1,3 +1,4 @@
+
 package com.product_pulse.product_pulseAPI.common.security;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -19,13 +20,21 @@ import java.util.stream.Collectors;
 /**
  * Sécurise l'API ProductPulse avec des JWT RS256.
  *
- * Les administrateurs sont identifiés par une liste
- * d'identifiants configurée exclusivement côté serveur.
+ * <p>Les administrateurs sont identifiés par une liste
+ * d'identifiants configurée exclusivement côté serveur.</p>
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    /**
+     * Configure les autorisations des routes REST.
+     *
+     * @param http configuration de la sécurité HTTP
+     * @param jwtAuthenticationConverter convertisseur JWT
+     * @return chaîne de filtres de sécurité
+     * @throws Exception en cas d'erreur de configuration
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -73,6 +82,10 @@ public class SecurityConfig {
                                 "/api/admin/feedback/*/reject"
                         ).hasRole("ADMIN")
                         .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/admin/feedback/*/github-issue"
+                        ).hasRole("ADMIN")
+                        .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/feedback/*/vote"
                         ).authenticated()
@@ -90,6 +103,13 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Attribue le rôle ADMIN uniquement aux utilisateurs
+     * autorisés par la configuration serveur.
+     *
+     * @param adminUserIds identifiants des administrateurs
+     * @return convertisseur des autorisations JWT
+     */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter(
             @Value("${app.admin.user-ids:}") String adminUserIds
