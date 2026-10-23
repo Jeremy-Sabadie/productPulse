@@ -3,6 +3,7 @@ package com.product_pulse.product_pulseAPI.feedback.repository;
 
 import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
 import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus;
+import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -43,6 +44,7 @@ public interface FeedbackRepository extends
         WHERE (:status IS NULL OR f.status = :status)
           AND (:applicationCode IS NULL
                OR f.applicationCode = :applicationCode)
+           AND (:category IS NULL OR f.category = :category)
         GROUP BY f
         ORDER BY COUNT(v.id) DESC, f.createdAt DESC, f.id DESC
         """, countQuery = """
@@ -51,10 +53,12 @@ public interface FeedbackRepository extends
         WHERE (:status IS NULL OR f.status = :status)
           AND (:applicationCode IS NULL
                OR f.applicationCode = :applicationCode)
+           AND (:category IS NULL OR f.category = :category)
         """)
     Page<Feedback> findSortedByVotesDesc(
             @Param("status") FeedbackStatus status,
             @Param("applicationCode") String applicationCode,
+            @Param("category") FeedbackCategory category,
             Pageable pageable
     );
 
@@ -71,6 +75,7 @@ public interface FeedbackRepository extends
         WHERE (:status IS NULL OR f.status = :status)
           AND (:applicationCode IS NULL
                OR f.applicationCode = :applicationCode)
+           AND (:category IS NULL OR f.category = :category)
         GROUP BY f
         ORDER BY COUNT(v.id) ASC, f.createdAt DESC, f.id DESC
         """, countQuery = """
@@ -79,10 +84,12 @@ public interface FeedbackRepository extends
         WHERE (:status IS NULL OR f.status = :status)
           AND (:applicationCode IS NULL
                OR f.applicationCode = :applicationCode)
+           AND (:category IS NULL OR f.category = :category)
         """)
     Page<Feedback> findSortedByVotesAsc(
             @Param("status") FeedbackStatus status,
             @Param("applicationCode") String applicationCode,
+            @Param("category") FeedbackCategory category,
             Pageable pageable
     );
 }

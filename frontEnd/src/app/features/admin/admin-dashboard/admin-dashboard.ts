@@ -5,6 +5,7 @@ import { finalize } from 'rxjs';
 
 import {
   Feedback,
+  FeedbackCategory,
   FeedbackPage,
   FeedbackStatus,
 } from '../models/feedback.model';
@@ -26,8 +27,7 @@ import {
  * - classer les avis par nombre de soutiens ;
  * - réserver les compteurs à l'administration.
  *
- * Le filtre par catégorie sera ajouté lorsque le modèle
- * métier backend prendra en charge cette information.
+ * - filtrer les avis par catégorie métier.
  */
 @Component({
   selector: 'app-admin-dashboard',
@@ -45,6 +45,7 @@ export class AdminDashboard implements OnInit {
   /** Critères de recherche administrateur. */
   readonly view = signal<FeedbackStatus>('PENDING');
   readonly applicationCode = signal('');
+  readonly category = signal<FeedbackCategory | ''>('');
   readonly sort = signal<AdminFeedbackSort>('recent');
 
   /** Compteurs visibles uniquement dans le dashboard admin. */
@@ -88,6 +89,7 @@ export class AdminDashboard implements OnInit {
         this.view(),
         this.applicationCode(),
         this.sort(),
+        this.category(),
       )
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
@@ -173,6 +175,18 @@ export class AdminDashboard implements OnInit {
     }
 
     this.applicationCode.set(application);
+    this.loadFeedbacks(0);
+  }
+
+  /** Filtre par catégorie métier et revient à la première page. */
+  changeCategory(value: string): void {
+    if (value !== '' && value !== 'BUG' && value !== 'IMPROVEMENT' && value !== 'FEATURE') {
+      return;
+    }
+    if (this.loading() || this.category() === value) {
+      return;
+    }
+    this.category.set(value as FeedbackCategory | '');
     this.loadFeedbacks(0);
   }
 

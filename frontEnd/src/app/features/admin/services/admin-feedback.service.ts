@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 
 import {
   Feedback,
+  FeedbackCategory,
   FeedbackPage,
   FeedbackStatus,
 } from '../models/feedback.model';
@@ -58,6 +59,7 @@ export class AdminFeedbackService {
     status: FeedbackStatus = 'PENDING',
     applicationCode = '',
     sort: AdminFeedbackSort = 'recent',
+    category: FeedbackCategory | '' = '',
   ): Observable<FeedbackPage> {
     let params = new HttpParams()
       .set('page', page)
@@ -70,6 +72,10 @@ export class AdminFeedbackService {
 
     if (application) {
       params = params.set('applicationCode', application);
+    }
+
+    if (category) {
+      params = params.set('category', category);
     }
 
     return this.http.get<FeedbackPage>(

@@ -46,6 +46,10 @@ public class Feedback {
     @Column(nullable = false, length = 20)
     private FeedbackStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private FeedbackCategory category;
+
     /**
      * Constructeur requis par JPA.
      */
@@ -80,6 +84,7 @@ public class Feedback {
                 createdAt, "createdAt"
         );
         this.status = FeedbackStatus.PENDING;
+        this.category = FeedbackCategory.IMPROVEMENT;
     }
 
     /**
@@ -88,6 +93,15 @@ public class Feedback {
      * @throws IllegalStateException si le feedback
      *         a déjà été modéré
      */
+    /** Affecte la catégorie choisie lors de la création. */
+    public void setCategory(FeedbackCategory category) {
+        this.category = Objects.requireNonNull(category, "category");
+    }
+
+    public FeedbackCategory getCategory() {
+        return category;
+    }
+
     public void approve() {
         requirePending();
         status = FeedbackStatus.APPROVED;

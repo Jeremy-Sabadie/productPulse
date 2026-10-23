@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 export interface CreateFeedbackRequest {
   title: string;
   description: string;
+  category: 'BUG' | 'IMPROVEMENT' | 'FEATURE';
 }
 
 export interface FeedbackResponse {

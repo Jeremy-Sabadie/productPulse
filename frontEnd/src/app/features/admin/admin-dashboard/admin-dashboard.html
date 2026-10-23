@@ -134,6 +134,22 @@
           </label>
 
           <label class="admin-filter-group">
+            <span class="admin-filter-label">Catégorie</span>
+            <select
+              class="admin-filter-select"
+              #categoryFilter
+              [value]="category()"
+              [disabled]="loading()"
+              (change)="changeCategory(categoryFilter.value)"
+            >
+              <option value="">Toutes les catégories</option>
+              <option value="BUG">Bug</option>
+              <option value="IMPROVEMENT">Amélioration</option>
+              <option value="FEATURE">Fonctionnalité</option>
+            </select>
+          </label>
+
+          <label class="admin-filter-group">
             <span class="admin-filter-label">Trier par</span>
 
             <select
@@ -241,6 +257,8 @@
                       {{ feedback.applicationCode }}
                     </span>
 
+                    <span class="metadata-separator" aria-hidden="true">·</span>
+                    <span class="app-tag">{{ feedback.category === 'BUG' ? 'Bug' : feedback.category === 'FEATURE' ? 'Fonctionnalité' : 'Amélioration' }}</span>
                     <span class="metadata-separator" aria-hidden="true">·</span>
                     <span>Utilisateur #{{ feedback.authorId }}</span>
                     <span class="metadata-separator" aria-hidden="true">·</span>

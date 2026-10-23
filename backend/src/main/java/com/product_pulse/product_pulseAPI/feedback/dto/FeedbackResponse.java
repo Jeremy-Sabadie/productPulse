@@ -3,6 +3,7 @@ package com.product_pulse.product_pulseAPI.feedback.dto;
 
 import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
 import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus;
+import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackCategory;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -27,7 +28,8 @@ public record FeedbackResponse(
         String applicationCode,
         Long authorId,
         Instant createdAt,
-        FeedbackStatus status
+        FeedbackStatus status,
+        FeedbackCategory category
 ) {
 
     /**
@@ -46,7 +48,8 @@ public record FeedbackResponse(
                 feedback.getApplicationCode(),
                 feedback.getAuthorId(),
                 feedback.getCreatedAt(),
-                feedback.getStatus()
+                feedback.getStatus(),
+                feedback.getCategory()
         );
     }
 }
