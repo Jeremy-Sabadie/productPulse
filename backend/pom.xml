@@ -168,6 +168,38 @@
                 </executions>
             </plugin>
 
+            <!-- JWT de test : clé publique chargée automatiquement -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <id>load-test-jwt</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>src/test/resources/jwt-test.properties</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <app.jwt.issuer>my-popote</app.jwt.issuer>
+                        <app.jwt.public-key>${jwt.test.public.key}</app.jwt.public-key>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
             <!-- Couverture obligatoire à 100 % -->
             <plugin>
                 <groupId>org.jacoco</groupId>
