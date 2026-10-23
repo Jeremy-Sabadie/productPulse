@@ -278,6 +278,31 @@
                     </p>
                   }
 
+                  <!-- Gestion des GitHub Issues réservée à l'administration. -->
+                  <div class="feedback-actions">
+                    @if (feedback.githubIssueNumber !== null && feedback.githubIssueUrl) {
+                      <a
+                        class="btn-github-issue"
+                        [href]="feedback.githubIssueUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Voir l'issue GitHub #{{ feedback.githubIssueNumber }} ↗
+                      </a>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-github-issue"
+                        [disabled]="processingId() !== null || loading()"
+                        (click)="createGitHubIssue(feedback)"
+                      >
+                        {{ processingId() === feedback.id
+                          ? 'Traitement en cours…'
+                          : 'Créer une issue GitHub' }}
+                      </button>
+                    }
+                  </div>
+
                   <!-- Modération uniquement pour les avis en attente. -->
                   @if (view() === 'PENDING') {
                     <div class="feedback-actions">

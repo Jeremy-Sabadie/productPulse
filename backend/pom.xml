@@ -25,6 +25,12 @@
     </properties>
 
     <dependencies>
+        <!-- JSON GitHub API -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
 
         <!-- API REST -->
         <dependency>

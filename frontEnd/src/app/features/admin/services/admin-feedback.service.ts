@@ -1,4 +1,3 @@
-
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -8,13 +7,11 @@ import {
   FeedbackCategory,
   FeedbackPage,
   FeedbackStatus,
+  GitHubIssueResult,
 } from '../models/feedback.model';
 
 /**
  * Critères de classement disponibles pour le dashboard.
- *
- * Ces valeurs correspondent au contrat de l'API backend.
- * Elles ne doivent pas être modifiées indépendamment du Java.
  */
 export type AdminFeedbackSort =
   | 'recent'
@@ -24,15 +21,7 @@ export type AdminFeedbackSort =
 /**
  * Centralise les appels HTTP du dashboard administrateur.
  *
- * Responsabilités :
- * - récupérer les avis filtrés et paginés ;
- * - récupérer les compteurs de soutiens ;
- * - approuver ou rejeter les avis.
- *
- * Sécurité :
- * l'API Spring Security reste responsable de la vérification
- * des droits administrateur. Les filtres Angular ne sont
- * jamais une protection d'accès.
+ * La vérification des droits reste assurée par Spring Security.
  */
 @Injectable({
   providedIn: 'root',
@@ -42,16 +31,7 @@ export class AdminFeedbackService {
   private readonly apiUrl = '/api/admin/feedback';
 
   /**
-   * Récupère une page d'avis avec les critères sélectionnés.
-   *
-   * Le filtrage et le classement sont réalisés côté backend,
-   * avant la pagination.
-   *
-   * @param page Page demandée, à partir de zéro.
-   * @param size Nombre d'avis par page.
-   * @param status Statut de modération.
-   * @param applicationCode Application à filtrer (facultatif).
-   * @param sort Ordre de classement.
+   * Récupère les feedbacks filtrés et paginés.
    */
   getFeedbacks(
     page = 0,
@@ -67,7 +47,6 @@ export class AdminFeedbackService {
       .set('status', status)
       .set('sort', sort);
 
-    // Ne pas envoyer un filtre vide à l'API.
     const application = applicationCode.trim();
 
     if (application) {
@@ -85,9 +64,7 @@ export class AdminFeedbackService {
   }
 
   /**
-   * Retourne le nombre de soutiens d'un avis.
-   *
-   * Ce compteur est réservé à l'administration.
+   * Récupère le nombre de soutiens d'un feedback.
    */
   getVoteCount(id: number): Observable<number> {
     return this.http.get<number>(
@@ -96,7 +73,7 @@ export class AdminFeedbackService {
   }
 
   /**
-   * Approuve un avis en attente de modération.
+   * Approuve un feedback.
    */
   approve(id: number): Observable<Feedback> {
     return this.http.patch<Feedback>(
@@ -106,11 +83,24 @@ export class AdminFeedbackService {
   }
 
   /**
-   * Rejette un avis en attente de modération.
+   * Rejette un feedback.
    */
   reject(id: number): Observable<Feedback> {
     return this.http.patch<Feedback>(
       `${this.apiUrl}/${id}/reject`,
+      {},
+    );
+  }
+
+  /**
+   * Crée une GitHub Issue à partir d'un feedback.
+   *
+   * @param id identifiant du feedback
+   * @returns numéro et URL de l'issue créée
+   */
+  createGitHubIssue(id: number): Observable<GitHubIssueResult> {
+    return this.http.post<GitHubIssueResult>(
+      `${this.apiUrl}/${id}/github-issue`,
       {},
     );
   }

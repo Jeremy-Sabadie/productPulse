@@ -1,4 +1,3 @@
-
 /**
  * Statuts possibles d'un feedback ProductPulse.
  */
@@ -17,6 +16,16 @@ export interface Feedback {
   createdAt: string;
   status: FeedbackStatus;
   category: FeedbackCategory;
+  githubIssueNumber: number | null;
+  githubIssueUrl: string | null;
+}
+
+/**
+ * Réponse de création d'une issue GitHub.
+ */
+export interface GitHubIssueResult {
+  number: number;
+  url: string;
 }
 
 /**
