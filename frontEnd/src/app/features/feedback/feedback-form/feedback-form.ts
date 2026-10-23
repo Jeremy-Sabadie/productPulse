@@ -24,6 +24,7 @@ export class FeedbackForm {
 
   title = '';
   description = '';
+  category: 'BUG' | 'IMPROVEMENT' | 'FEATURE' | '' = '';
 
   readonly sending = signal(false);
   readonly success = signal(false);
@@ -37,7 +38,7 @@ export class FeedbackForm {
     const title = this.title.trim();
     const description = this.description.trim();
 
-    if (!title || !description || this.sending()) {
+    if (!title || !description || !this.category || this.sending()) {
       return;
     }
 
@@ -55,12 +56,13 @@ export class FeedbackForm {
     this.error.set('');
 
     this.feedbackService
-      .createFeedback({ title, description })
+      .createFeedback({ title, description, category: this.category })
       .pipe(finalize(() => this.sending.set(false)))
       .subscribe({
         next: () => {
           this.title = '';
           this.description = '';
+          this.category = '';
           this.success.set(true);
 
           void this.notifications.feedbackSubmitted();

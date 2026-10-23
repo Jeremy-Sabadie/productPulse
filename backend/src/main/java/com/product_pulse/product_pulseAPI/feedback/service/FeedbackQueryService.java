@@ -3,6 +3,7 @@ package com.product_pulse.product_pulseAPI.feedback.service;
 
 import com.product_pulse.product_pulseAPI.feedback.entity.Feedback;
 import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus;
+import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackCategory;
 import com.product_pulse.product_pulseAPI.feedback.repository.FeedbackRepository;
 
 import jakarta.persistence.criteria.Predicate;
@@ -56,7 +57,7 @@ public class FeedbackQueryService {
             int page,
             int size
     ) {
-        return findAll(status, null, "recent", page, size);
+        return findAll(status, null, null, "recent", page, size);
     }
 
     /**
@@ -72,6 +73,19 @@ public class FeedbackQueryService {
     public Page<Feedback> findAll(
             FeedbackStatus status,
             String applicationCode,
+            String sort,
+            int page,
+            int size
+    ) {
+        return findAll(status, applicationCode, null, sort, page, size);
+    }
+
+    /** Recherche combinant statut, application, catégorie et tri en base. */
+    @Transactional(readOnly = true)
+    public Page<Feedback> findAll(
+            FeedbackStatus status,
+            String applicationCode,
+            FeedbackCategory category,
             String sort,
             int page,
             int size
@@ -105,9 +119,9 @@ public class FeedbackQueryService {
 
             return ordering.equals("votes_desc")
                     ? repository.findSortedByVotesDesc(
-                            status, application, pageable)
+                            status, application, category, pageable)
                     : repository.findSortedByVotesAsc(
-                            status, application, pageable);
+                            status, application, category, pageable);
         }
 
         /*
@@ -122,6 +136,10 @@ public class FeedbackQueryService {
                         predicates.add(builder.equal(
                                 root.get("status"), status
                         ));
+                    }
+
+                    if (category != null) {
+                        predicates.add(builder.equal(root.get("category"), category));
                     }
 
                     if (application != null) {

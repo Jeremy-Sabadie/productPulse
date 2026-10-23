@@ -1,6 +1,8 @@
 
 package com.product_pulse.product_pulseAPI.feedback.dto;
 
+import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackCategory;
+
 /**
  * Données nécessaires à la création d'un feedback.
  *
@@ -12,6 +14,11 @@ package com.product_pulse.product_pulseAPI.feedback.dto;
  */
 public record CreateFeedbackRequest(
         String title,
-        String description
+        String description,
+        FeedbackCategory category
 ) {
+    /** Compatibilité avec les anciens tests et appels internes. */
+    public CreateFeedbackRequest(String title, String description) {
+        this(title, description, FeedbackCategory.IMPROVEMENT);
+    }
 }

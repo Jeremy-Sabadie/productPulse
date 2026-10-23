@@ -3,6 +3,7 @@ package com.product_pulse.product_pulseAPI.feedback.controller;
 
 import com.product_pulse.product_pulseAPI.feedback.dto.FeedbackResponse;
 import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus;
+import com.product_pulse.product_pulseAPI.feedback.entity.FeedbackCategory;
 import com.product_pulse.product_pulseAPI.feedback.repository.FeedbackVoteRepository;
 import com.product_pulse.product_pulseAPI.feedback.service.FeedbackQueryService;
 
@@ -55,6 +56,11 @@ public class FeedbackAdminQueryController {
         );
     }
 
+    /** Compatibilité avec les anciens tests Java (sans nouveaux filtres). */
+    public ResponseEntity<Page<FeedbackResponse>> findAll(FeedbackStatus status, int page, int size) {
+        return findAll(status, null, null, "recent", page, size);
+    }
+
     /**
      * Liste paginée des avis avec filtres facultatifs.
      *
@@ -73,6 +79,9 @@ public class FeedbackAdminQueryController {
             @RequestParam(required = false)
             String applicationCode,
 
+            @RequestParam(required = false)
+            FeedbackCategory category,
+
             @RequestParam(defaultValue = "recent")
             String sort,
 
@@ -86,6 +95,7 @@ public class FeedbackAdminQueryController {
                 .findAll(
                         status,
                         applicationCode,
+                        category,
                         sort,
                         page,
                         size
