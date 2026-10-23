@@ -103,6 +103,7 @@ public class FeedbackService {
                 Instant.now(clock)
         );
 
+        feedback.setCategory(Objects.requireNonNull(request.category(), "category"));
         return feedbackRepository.save(feedback);
     }
 

@@ -25,6 +25,14 @@
       maxlength="150"
     />
 
+    <label for="category">Catégorie *</label>
+    <select id="category" name="category" [(ngModel)]="category" required>
+      <option value="" disabled>Choisir une catégorie</option>
+      <option value="BUG">Bug</option>
+      <option value="IMPROVEMENT">Amélioration</option>
+      <option value="FEATURE">Nouvelle fonctionnalité</option>
+    </select>
+
     <label for="description">Description *</label>
     <textarea
       id="description"

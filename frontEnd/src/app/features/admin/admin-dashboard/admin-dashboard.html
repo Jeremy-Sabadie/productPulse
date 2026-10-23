@@ -1,4 +1,6 @@
+
 <div class="dashboard">
+  <!-- Navigation latérale : structure et classes d'origine conservées. -->
   <aside class="sidebar" aria-label="Navigation latérale">
     <div class="brand">
       <span class="brand-symbol" aria-hidden="true">
@@ -22,6 +24,7 @@
     </div>
   </aside>
 
+  <!-- Navigation compacte sur mobile. -->
   <div class="mobile-header">
     <div class="mobile-brand">
       <span class="mobile-brand-symbol" aria-hidden="true">P.</span>
@@ -43,50 +46,153 @@
         <div class="heading-copy">
           <p class="eyebrow">MODÉRATION DES RETOURS</p>
           <h1>Gestion des feedbacks</h1>
+
           <p class="subtitle">
             Examinez, qualifiez et modérez les retours de vos utilisateurs.
           </p>
         </div>
 
-        <div class="count-card">
+        <!-- Le compteur reflète les filtres actifs. -->
+        <div class="count-card" aria-label="Nombre de retours filtrés">
           <span class="count-number">
             {{ totalElements() === null ? '—' : totalElements() }}
           </span>
           <span class="count-label">
-            retours correspondant au filtre
+            {{ view() === 'PENDING'
+              ? 'retours en attente'
+              : view() === 'APPROVED'
+                ? 'retours publiés'
+                : 'retours rejetés' }}
           </span>
         </div>
       </div>
 
+      <!--
+        US08 / US14 — Barre de filtres administrateur.
+
+        Les critères sont envoyés à l'API. Le backend applique
+        les filtres et le tri avant de paginer les résultats.
+
+        Les boutons de statut remplacent les boutons non stylisés
+        présents sous le titre dans la version précédente.
+      -->
+      <section class="admin-toolbar" aria-label="Filtres administrateur">
+        <div class="admin-toolbar-heading">
+          <h2>Explorer les retours</h2>
+          <span>Affiner les résultats</span>
+        </div>
+
+        <div class="admin-toolbar-content">
+          <div class="admin-filter-group admin-status-group">
+            <span class="admin-filter-label">Modération</span>
+
+            <div class="admin-status-tabs" role="group" aria-label="Statut">
+              <button
+                type="button"
+                [class.is-active]="view() === 'PENDING'"
+                [attr.aria-pressed]="view() === 'PENDING'"
+                [disabled]="loading()"
+                (click)="changeView('PENDING')"
+              >
+                À examiner
+              </button>
+
+              <button
+                type="button"
+                [class.is-active]="view() === 'APPROVED'"
+                [attr.aria-pressed]="view() === 'APPROVED'"
+                [disabled]="loading()"
+                (click)="changeView('APPROVED')"
+              >
+                Publiés
+              </button>
+
+              <button
+                type="button"
+                [class.is-active]="view() === 'REJECTED'"
+                [attr.aria-pressed]="view() === 'REJECTED'"
+                [disabled]="loading()"
+                (click)="changeView('REJECTED')"
+              >
+                Rejetés
+              </button>
+            </div>
+          </div>
+
+          <label class="admin-filter-group">
+            <span class="admin-filter-label">Application</span>
+
+            <input
+              class="admin-filter-input"
+              type="text"
+              #applicationFilter
+              [value]="applicationCode()"
+              [disabled]="loading()"
+              placeholder="Toutes les applications"
+              (change)="changeApplication(applicationFilter.value)"
+            />
+          </label>
+
+          <label class="admin-filter-group">
+            <span class="admin-filter-label">Catégorie</span>
+            <select
+              class="admin-filter-select"
+              #categoryFilter
+              [value]="category()"
+              [disabled]="loading()"
+              (change)="changeCategory(categoryFilter.value)"
+            >
+              <option value="">Toutes les catégories</option>
+              <option value="BUG">Bug</option>
+              <option value="IMPROVEMENT">Amélioration</option>
+              <option value="FEATURE">Fonctionnalité</option>
+            </select>
+          </label>
+
+          <label class="admin-filter-group">
+            <span class="admin-filter-label">Trier par</span>
+
+            <select
+              class="admin-filter-select"
+              #sortFilter
+              [value]="sort()"
+              [disabled]="loading()"
+              (change)="changeSort(sortFilter.value)"
+            >
+              <option value="recent">Plus récents</option>
+              <option value="votes_desc">Plus soutenus</option>
+              <option value="votes_asc">Moins soutenus</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <!-- Liste des avis : structure d'origine conservée. -->
       <section class="feedback-section" aria-label="Liste des feedbacks">
         <div class="section-header">
           <div class="section-title">
             <span class="section-indicator" aria-hidden="true"></span>
-            <h2>Retours utilisateurs</h2>
+
+            <h2>
+              {{ view() === 'PENDING'
+                ? 'À examiner'
+                : view() === 'APPROVED'
+                  ? 'Publiés'
+                  : 'Rejetés' }}
+            </h2>
+
             <span class="section-count">
               {{ totalElements() === null ? '—' : totalElements() }}
             </span>
           </div>
-          <span class="section-description">Gestion des feedbacks</span>
-        </div>
 
-        <div
-          class="feedback-filters"
-          role="group"
-          aria-label="Filtrer les feedbacks par statut"
-        >
-          @for (filter of filters; track filter.label) {
-            <button
-              type="button"
-              class="filter-button"
-              [class.active]="selectedStatus() === filter.value"
-              [attr.aria-pressed]="selectedStatus() === filter.value"
-              [disabled]="loading() || processingId() !== null"
-              (click)="selectStatus(filter.value)"
-            >
-              {{ filter.label }}
-            </button>
-          }
+          <span class="section-description">
+            {{ view() === 'PENDING'
+              ? 'File de modération'
+              : view() === 'APPROVED'
+                ? 'Avis approuvés'
+                : 'Avis rejetés' }}
+          </span>
         </div>
 
         @if (loading()) {
@@ -100,6 +206,7 @@
             <div class="error-content">
               <h3>Les retours sont momentanément indisponibles</h3>
               <p>{{ error() }}</p>
+
               <button
                 type="button"
                 class="retry-button"
@@ -111,41 +218,31 @@
           </div>
         } @else {
           @if (actionError()) {
-            <p class="action-error" role="alert">{{ actionError() }}</p>
+            <p class="action-error" role="alert">
+              {{ actionError() }}
+            </p>
           }
 
           @if (feedbacks().length === 0) {
             <div class="empty-state">
               <div class="empty-icon" aria-hidden="true">✓</div>
-              <h3>Aucun feedback trouvé</h3>
-              <p>Aucun retour ne correspond au filtre sélectionné.</p>
+              <h3>Aucun retour trouvé</h3>
+              <p>Aucun avis ne correspond aux filtres sélectionnés.</p>
             </div>
           } @else {
             <div class="feedback-list">
               @for (feedback of feedbacks(); track feedback.id) {
                 <article class="feedback-card">
                   <div class="feedback-topline">
-                    <span class="feedback-id">
-                      #{{ feedback.id }}
-                    </span>
+                    <span class="feedback-id">#{{ feedback.id }}</span>
 
-                    <span
-                      class="status-badge"
-                      [class.status-approved]="feedback.status === 'APPROVED'"
-                      [class.status-rejected]="feedback.status === 'REJECTED'"
-                    >
+                    <span class="status-badge">
                       <span class="status-dot" aria-hidden="true"></span>
-                      @switch (feedback.status) {
-                        @case ('APPROVED') {
-                          Approuvé
-                        }
-                        @case ('REJECTED') {
-                          Rejeté
-                        }
-                        @default {
-                          En attente
-                        }
-                      }
+                      {{ feedback.status === 'PENDING'
+                        ? 'En attente'
+                        : feedback.status === 'APPROVED'
+                          ? 'Publié'
+                          : 'Rejeté' }}
                     </span>
                   </div>
 
@@ -160,24 +257,54 @@
                       {{ feedback.applicationCode }}
                     </span>
 
-                    <span class="metadata-separator" aria-hidden="true">
-                      ·
-                    </span>
-
-                    <span>
-                      Utilisateur #{{ feedback.authorId }}
-                    </span>
-
-                    <span class="metadata-separator" aria-hidden="true">
-                      ·
-                    </span>
+                    <span class="metadata-separator" aria-hidden="true">·</span>
+                    <span class="app-tag">{{ feedback.category === 'BUG' ? 'Bug' : feedback.category === 'FEATURE' ? 'Fonctionnalité' : 'Amélioration' }}</span>
+                    <span class="metadata-separator" aria-hidden="true">·</span>
+                    <span>Utilisateur #{{ feedback.authorId }}</span>
+                    <span class="metadata-separator" aria-hidden="true">·</span>
 
                     <time [attr.datetime]="feedback.createdAt">
                       {{ feedback.createdAt | date:'dd/MM/yyyy' }}
                     </time>
                   </div>
 
-                  @if (feedback.status === 'PENDING') {
+                  <!-- Les compteurs ne sont pas exposés au public. -->
+                  @if (view() === 'APPROVED') {
+                    <p class="feedback-votes">
+                      Soutiens :
+                      {{ voteCounts()[feedback.id] === undefined
+                        ? '…'
+                        : voteCounts()[feedback.id] }}
+                    </p>
+                  }
+
+                  <!-- Gestion des GitHub Issues réservée à l'administration. -->
+                  <div class="feedback-actions">
+                    @if (feedback.githubIssueNumber !== null && feedback.githubIssueUrl) {
+                      <a
+                        class="btn-github-issue"
+                        [href]="feedback.githubIssueUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Voir l'issue GitHub #{{ feedback.githubIssueNumber }} ↗
+                      </a>
+                    } @else {
+                      <button
+                        type="button"
+                        class="btn-github-issue"
+                        [disabled]="processingId() !== null || loading()"
+                        (click)="createGitHubIssue(feedback)"
+                      >
+                        {{ processingId() === feedback.id
+                          ? 'Traitement en cours…'
+                          : 'Créer une issue GitHub' }}
+                      </button>
+                    }
+                  </div>
+
+                  <!-- Modération uniquement pour les avis en attente. -->
+                  @if (view() === 'PENDING') {
                     <div class="feedback-actions">
                       <button
                         type="button"
@@ -205,6 +332,7 @@
         }
       </section>
 
+      <!-- Pagination pilotée par le backend. -->
       @if (totalPages() > 1 && !error()) {
         <nav class="pagination" aria-label="Pagination des feedbacks">
           <button

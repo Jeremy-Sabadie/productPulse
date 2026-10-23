@@ -21,6 +21,13 @@ export const routes: Routes = [
         .then((module) => module.FeedbackList),
   },
   {
+    path: 'feedback/mine',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/feedback/my-feedbacks/my-feedbacks')
+        .then((module) => module.MyFeedbacks),
+  },
+  {
     path: 'feedback/new',
     canActivate: [authGuard],
     loadComponent: () =>

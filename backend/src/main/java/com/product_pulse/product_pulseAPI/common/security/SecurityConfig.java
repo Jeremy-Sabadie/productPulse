@@ -20,20 +20,20 @@ import java.util.stream.Collectors;
 /**
  * Sécurise l'API ProductPulse avec des JWT RS256.
  *
- * Les administrateurs sont identifiés par une liste
- * d'identifiants configurée exclusivement côté serveur.
+ * <p>Les administrateurs sont identifiés par une liste
+ * d'identifiants configurée exclusivement côté serveur.</p>
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     /**
-     * Configure les autorisations HTTP.
+     * Configure les autorisations des routes REST.
      *
-     * @param http configuration de sécurité
-     * @param jwtAuthenticationConverter conversion JWT vers authentification
-     * @return chaîne des filtres HTTP
-     * @throws Exception si la configuration échoue
+     * @param http configuration de la sécurité HTTP
+     * @param jwtAuthenticationConverter convertisseur JWT
+     * @return chaîne de filtres de sécurité
+     * @throws Exception en cas d'erreur de configuration
      */
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -64,7 +64,9 @@ public class SecurityConfig {
                         ).authenticated()
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/feedback"
+                                "/api/feedback",
+                                "/api/feedback/mine",
+                                "/api/feedback/my-votes"
                         ).authenticated()
                         .requestMatchers(
                                 HttpMethod.POST,
@@ -79,6 +81,22 @@ public class SecurityConfig {
                                 "/api/admin/feedback/*/approve",
                                 "/api/admin/feedback/*/reject"
                         ).hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/admin/feedback/*/github-issue"
+                        ).hasRole("ADMIN")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/feedback/*/vote"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/feedback/*/vote"
+                        ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/admin/feedback/*/votes/count"
+                        ).hasRole("ADMIN")
                         .anyRequest().denyAll()
                 );
 
@@ -86,13 +104,11 @@ public class SecurityConfig {
     }
 
     /**
-     * Attribue ROLE_ADMIN uniquement aux utilisateurs
-     * autorisés dans la configuration de ProductPulse.
+     * Attribue le rôle ADMIN uniquement aux utilisateurs
+     * autorisés par la configuration serveur.
      *
-     * Aucun rôle fourni par le JWT n'est accepté.
-     *
-     * @param adminUserIds identifiants autorisés, séparés par des virgules
-     * @return convertisseur d'authentification JWT
+     * @param adminUserIds identifiants des administrateurs
+     * @return convertisseur des autorisations JWT
      */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter(

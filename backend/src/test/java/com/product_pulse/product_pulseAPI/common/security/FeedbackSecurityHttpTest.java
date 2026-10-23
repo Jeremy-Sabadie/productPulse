@@ -8,6 +8,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,6 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class FeedbackSecurityHttpTest {
 
     private static final String FEEDBACK_URL = "/api/feedback";
+    private static final String VOTE_URL = "/api/feedback/1/vote";
+    private static final String MY_VOTES_URL = "/api/feedback/my-votes";
+
 
     private static final String VALID_BODY = """
             {
@@ -30,6 +36,32 @@ class FeedbackSecurityHttpTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void shouldRejectAnonymousVote() throws Exception {
+        mockMvc.perform(put(VOTE_URL))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldRejectAnonymousVoteRemoval() throws Exception {
+        mockMvc.perform(delete(VOTE_URL))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldRejectAnonymousVoteHistory() throws Exception {
+        mockMvc.perform(get(MY_VOTES_URL))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldRejectInvalidJwtOnVote() throws Exception {
+        mockMvc.perform(put(VOTE_URL)
+                        .header("Authorization", "Bearer fake.jwt.token"))
+                .andExpect(status().isUnauthorized());
+    }
+
 
     /**
      * Refuse la création de feedback sans authentification.

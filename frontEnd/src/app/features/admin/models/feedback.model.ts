@@ -1,8 +1,8 @@
-
 /**
  * Statuts possibles d'un feedback ProductPulse.
  */
 export type FeedbackStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type FeedbackCategory = 'BUG' | 'IMPROVEMENT' | 'FEATURE';
 
 /**
  * Représente un retour utilisateur renvoyé par l'API.
@@ -15,6 +15,17 @@ export interface Feedback {
   authorId: number;
   createdAt: string;
   status: FeedbackStatus;
+  category: FeedbackCategory;
+  githubIssueNumber: number | null;
+  githubIssueUrl: string | null;
+}
+
+/**
+ * Réponse de création d'une issue GitHub.
+ */
+export interface GitHubIssueResult {
+  number: number;
+  url: string;
 }
 
 /**
