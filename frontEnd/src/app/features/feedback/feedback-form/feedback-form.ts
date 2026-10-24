@@ -34,7 +34,7 @@ export class FeedbackForm {
    * Retourne toujours un booléen.
    */
   titleInvalid(field: NgModel): boolean {
-    return field.touched &&
+    return field.touched === true &&
       (field.invalid === true || !this.title.trim());
   }
 
@@ -43,7 +43,7 @@ export class FeedbackForm {
    * Retourne toujours un booléen.
    */
   descriptionInvalid(field: NgModel): boolean {
-    return field.touched &&
+    return field.touched === true &&
       (field.invalid === true || !this.description.trim());
   }
 
