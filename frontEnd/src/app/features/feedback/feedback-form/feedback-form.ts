@@ -1,5 +1,6 @@
+
 import { Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgModel } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { NotificationService } from '../../../core/services/notification.service';
@@ -7,9 +8,7 @@ import { FeedbackService } from '../services/feedback.service';
 
 /**
  * Formulaire de contribution des utilisateurs My Popote.
- *
  * Les avis sont soumis à modération avant publication.
- * Les notifications sont centralisées dans NotificationService.
  */
 @Component({
   selector: 'app-feedback-form',
@@ -31,14 +30,42 @@ export class FeedbackForm {
   readonly error = signal('');
 
   /**
+   * Vérifie la validité du titre.
+   * Retourne toujours un booléen.
+   */
+  titleInvalid(field: NgModel): boolean {
+    return field.touched &&
+      (field.invalid === true || !this.title.trim());
+  }
+
+  /**
+   * Vérifie la validité de la description.
+   * Retourne toujours un booléen.
+   */
+  descriptionInvalid(field: NgModel): boolean {
+    return field.touched &&
+      (field.invalid === true || !this.description.trim());
+  }
+
+  /**
    * Valide et soumet le feedback.
-   * Empêche les envois multiples pendant la requête.
+   * Empêche les envois multiples.
    */
   async submit(): Promise<void> {
     const title = this.title.trim();
     const description = this.description.trim();
 
-    if (!title || !description || !this.category || this.sending()) {
+    this.success.set(false);
+    this.error.set('');
+
+    if (!title || !description || !this.category) {
+      this.error.set(
+        'Complétez tous les champs avec des informations valides.',
+      );
+      return;
+    }
+
+    if (this.sending()) {
       return;
     }
 
@@ -52,11 +79,13 @@ export class FeedbackForm {
     }
 
     this.sending.set(true);
-    this.success.set(false);
-    this.error.set('');
 
     this.feedbackService
-      .createFeedback({ title, description, category: this.category })
+      .createFeedback({
+        title,
+        description,
+        category: this.category,
+      })
       .pipe(finalize(() => this.sending.set(false)))
       .subscribe({
         next: () => {
@@ -64,15 +93,11 @@ export class FeedbackForm {
           this.description = '';
           this.category = '';
           this.success.set(true);
-
-          void this.notifications.feedbackSubmitted();
         },
         error: () => {
-          const message =
-            "Impossible d'envoyer votre avis. Veuillez réessayer.";
-
-          this.error.set(message);
-          void this.notifications.error(message);
+          this.error.set(
+            "Impossible d'envoyer votre avis. Veuillez réessayer.",
+          );
         },
       });
   }
