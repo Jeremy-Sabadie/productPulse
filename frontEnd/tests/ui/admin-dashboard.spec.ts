@@ -76,6 +76,20 @@ async function mockFeedbackList(
   });
 }
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem('productpulse.accessToken', 'playwright-test-token');
+  });
+
+  await page.route('**/api/auth/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ role: 'ADMIN' }),
+    });
+  });
+});
+
 test.describe('Dashboard administrateur - Feedbacks', () => {
   test('affiche les feedbacks en attente', async ({ page }) => {
     await mockFeedbackList(page, feedbacks);
@@ -113,7 +127,7 @@ test.describe('Dashboard administrateur - Feedbacks', () => {
     await page.goto(DASHBOARD_URL);
 
     await expect(
-      page.getByText('Aucun feedback en attente'),
+      page.getByRole('heading', { name: 'Aucun retour trouvé' }),
     ).toBeVisible();
   });
 
