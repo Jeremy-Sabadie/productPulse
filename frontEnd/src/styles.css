@@ -1,6 +1,5 @@
-/* You can add global styles to this file, and also import other style files */
 
-/* ProductPulse — fondations globales */
+/* ProductPulse — Fondations globales */
 
 *,
 *::before,
@@ -41,14 +40,10 @@ app-root {
   }
 }
 
-/* ======================================================
-   ProductPulse — Dashboard administrateur (US08 / US14)
-   Complément au design original, sans modifier la sidebar
-   ni les cartes de feedback.
-   ====================================================== */
+/* Dashboard administrateur — Filtres */
 
 .admin-toolbar {
-  margin: 0 0 24px;
+  margin: 0 0 18px;
   background: #fff;
   border: 1px solid #e2e6f0;
   border-radius: 14px;
@@ -60,7 +55,7 @@ app-root {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 17px 22px;
+  padding: 12px 18px;
   border-bottom: 1px solid #edf0f5;
 }
 
@@ -80,14 +75,14 @@ app-root {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 18px;
-  padding: 20px 22px;
+  gap: 12px;
+  padding: 14px 18px;
 }
 
 .admin-filter-group {
   display: flex;
   flex-direction: column;
-  gap: 9px;
+  gap: 6px;
   min-width: 170px;
 }
 
@@ -137,9 +132,8 @@ app-root {
 
 .admin-filter-input,
 .admin-filter-select {
-  box-sizing: border-box;
   width: 100%;
-  min-height: 43px;
+  min-height: 42px;
   padding: 10px 12px;
   border: 1px solid #dfe4ee;
   border-radius: 9px;
@@ -160,6 +154,35 @@ app-root {
   outline-offset: 2px;
 }
 
+/* Grands écrans : quatre filtres alignés */
+@media (min-width: 1400px) {
+  .admin-toolbar-content {
+    display: grid;
+    grid-template-columns:
+      minmax(280px, 1.8fr)
+      repeat(3, minmax(130px, 1fr));
+    gap: 12px;
+    align-items: end;
+  }
+
+  .admin-filter-group,
+  .admin-status-group {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-status-tabs {
+    flex-wrap: nowrap;
+  }
+
+  .admin-status-tabs button {
+    flex: 1;
+    padding: 10px 8px;
+    white-space: nowrap;
+  }
+}
+
+/* Smartphones */
 @media (max-width: 760px) {
   .admin-toolbar-heading,
   .admin-toolbar-content {
