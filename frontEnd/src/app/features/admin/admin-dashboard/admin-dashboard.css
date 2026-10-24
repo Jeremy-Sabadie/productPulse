@@ -625,8 +625,10 @@ h1 {
   }
 
   h1 {
-    font-size: 27px;
-    letter-spacing: -1px;
+    font-size: clamp(21px, 6vw, 27px);
+    letter-spacing: -0.7px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
   }
 
   .count-card {
@@ -689,6 +691,7 @@ h1 {
 }
 
 /* GitHub Issues — actions administrateur */
+
 .btn-github-issue {
   display: inline-flex;
   align-items: center;
@@ -721,4 +724,80 @@ h1 {
 .btn-github-issue:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* Dashboard administrateur compact */
+
+.page-content {
+  padding-top: 28px;
+  padding-bottom: 32px;
+}
+
+.page-heading {
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.count-card {
+  padding: 12px 18px;
+  background: #eef0fc;
+  border: 1px solid #dfe3fa;
+  border-radius: 12px;
+}
+
+.count-number {
+  font-size: 32px;
+}
+
+.count-label {
+  font-size: 12px;
+  color: #59648b;
+}
+
+.feedback-card {
+  padding: 18px 24px;
+}
+
+.feedback-topline {
+  margin-bottom: 8px;
+}
+
+.feedback-description {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.feedback-metadata {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+.feedback-actions {
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .page-content {
+    padding: 22px 18px;
+  }
+
+  .page-heading {
+    margin-bottom: 20px;
+  }
+
+  .count-card {
+    align-items: flex-start;
+  }
+
+  .feedback-card {
+    padding: 18px;
+  }
 }
