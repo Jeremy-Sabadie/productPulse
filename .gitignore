@@ -8,3 +8,6 @@
 .vscode/
 api-dev.log
 front-dev.log
+
+# Local database backups
+/backups/
