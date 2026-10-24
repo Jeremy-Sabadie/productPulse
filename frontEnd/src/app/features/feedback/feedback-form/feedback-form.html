@@ -1,3 +1,4 @@
+
 <section class="feedback-form">
   <h1>Donner mon avis</h1>
   <p>Une idée ou un problème à signaler sur My Popote ?</p>
@@ -7,7 +8,9 @@
   </a>
 
   @if (success()) {
-    <p role="status">Avis envoyé ! Merci pour votre retour.</p>
+    <p role="status">
+      Avis envoyé ! Il sera examiné avant publication.
+    </p>
   }
 
   @if (error()) {
@@ -21,28 +24,71 @@
       name="title"
       type="text"
       [(ngModel)]="title"
+      #titleField="ngModel"
       required
       maxlength="150"
+      placeholder="Ex. : Ajouter un filtre par saison"
+      [class.is-invalid]="titleInvalid(titleField)"
+      [attr.aria-invalid]="titleInvalid(titleField)"
+      aria-describedby="title-hint title-error"
     />
+    <p id="title-hint" class="field-hint">
+      Résumez votre idée ou votre problème en quelques mots.
+    </p>
+    @if (titleInvalid(titleField)) {
+      <p id="title-error" class="field-error">
+        Saisissez un titre valide.
+      </p>
+    }
 
     <label for="category">Catégorie *</label>
-    <select id="category" name="category" [(ngModel)]="category" required>
+    <select
+      id="category"
+      name="category"
+      [(ngModel)]="category"
+      #categoryField="ngModel"
+      required
+      [class.is-invalid]="categoryField.invalid && categoryField.touched"
+      [attr.aria-invalid]="categoryField.invalid && categoryField.touched"
+      aria-describedby="category-error"
+    >
       <option value="" disabled>Choisir une catégorie</option>
       <option value="BUG">Bug</option>
       <option value="IMPROVEMENT">Amélioration</option>
       <option value="FEATURE">Nouvelle fonctionnalité</option>
     </select>
+    @if (categoryField.invalid && categoryField.touched) {
+      <p id="category-error" class="field-error">
+        Choisissez une catégorie.
+      </p>
+    }
 
     <label for="description">Description *</label>
     <textarea
       id="description"
       name="description"
       [(ngModel)]="description"
+      #descriptionField="ngModel"
       rows="6"
       required
+      placeholder="Expliquez votre idée ou décrivez le problème rencontré..."
+      [class.is-invalid]="descriptionInvalid(descriptionField)"
+      [attr.aria-invalid]="descriptionInvalid(descriptionField)"
+      aria-describedby="description-hint description-error"
     ></textarea>
+    <p id="description-hint" class="field-hint">
+      Pour un bug, précisez ce que vous faisiez et ce qui s'est passé.
+    </p>
+    @if (descriptionInvalid(descriptionField)) {
+      <p id="description-error" class="field-error">
+        Saisissez une description valide.
+      </p>
+    }
 
-    <button type="submit" [disabled]="sending() || feedbackForm.invalid">
+    <button
+      type="submit"
+      [disabled]="sending() || feedbackForm.invalid"
+    >
       {{ sending() ? 'Envoi en cours...' : 'Envoyer mon avis' }}
     </button>
   </form>

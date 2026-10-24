@@ -1,3 +1,4 @@
+
 :host {
   display: block;
   width: 100%;
@@ -20,7 +21,7 @@
   max-width: 744px;
   min-width: 0;
   margin: 0 auto;
-  padding: 64px 32px 80px;
+  padding: 40px 32px 64px;
 }
 
 .feedback-form h1 {
@@ -38,13 +39,36 @@
   line-height: 1.6;
 }
 
+.feedback-form .community-link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: -12px 0 24px;
+  color: #4f46e5;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.feedback-form .community-link:hover {
+  color: #3730a3;
+  text-decoration: underline;
+}
+
+.feedback-form .community-link:focus-visible {
+  outline: 3px solid #a5b4fc;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
 .feedback-form form {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 14px;
-  padding: 32px;
-  background: #ffffff;
+  gap: 12px;
+  padding: 28px 32px;
+  background: #fff;
   border: 1px solid #e5e8f2;
   border-radius: 22px;
   box-shadow: 0 12px 40px rgba(31, 41, 78, 0.06);
@@ -57,15 +81,17 @@
 }
 
 .feedback-form input,
+.feedback-form select,
 .feedback-form textarea {
   display: block;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  padding: 14px 16px;
+  min-height: 50px;
+  padding: 12px 16px;
   border: 1px solid #d7ddec;
   border-radius: 12px;
-  background: #ffffff;
+  background: #fff;
   color: #1e2742;
   font: inherit;
   font-size: 1rem;
@@ -73,16 +99,44 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.feedback-form input::placeholder,
+.feedback-form textarea::placeholder {
+  color: #8490a6;
+}
+
+.feedback-form select {
+  cursor: pointer;
+}
+
 .feedback-form textarea {
-  min-height: 160px;
+  min-height: 150px;
   resize: vertical;
 }
 
 .feedback-form input:focus,
+.feedback-form select:focus,
 .feedback-form textarea:focus {
   outline: none;
   border-color: #6366f1;
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+
+.feedback-form .field-hint {
+  margin: -4px 0 4px;
+  color: #64708a;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.feedback-form .field-error {
+  margin: -4px 0 4px;
+  color: #b42332;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.feedback-form .is-invalid {
+  border-color: #dc3545;
 }
 
 .feedback-form button {
@@ -94,7 +148,7 @@
   border: 0;
   border-radius: 12px;
   background: #4f46e5;
-  color: #ffffff;
+  color: #fff;
   font: inherit;
   font-size: 1rem;
   font-weight: 700;
@@ -114,7 +168,7 @@
 
 .feedback-form button:disabled {
   opacity: 0.6;
-  cursor: wait;
+  cursor: not-allowed;
 }
 
 .feedback-form [role="status"] {
@@ -137,7 +191,7 @@
 
 @media (max-width: 600px) {
   .feedback-form {
-    padding: 36px 16px 64px;
+    padding: 28px 16px 56px;
   }
 
   .feedback-form form {
@@ -150,48 +204,11 @@
   }
 }
 
-.feedback-form .community-link {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  margin: -12px 0 28px;
-  color: #4f46e5;
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.5;
-  text-decoration: none;
-}
-
-.feedback-form .community-link:hover {
-  color: #3730a3;
-  text-decoration: underline;
-}
-
-.feedback-form .community-link:focus-visible {
-  outline: 3px solid #a5b4fc;
-  outline-offset: 4px;
-  border-radius: 4px;
-}
-
-.feedback-form .community-link {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  margin: -12px 0 28px;
-  color: #4f46e5;
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.5;
-  text-decoration: none;
-}
-
-.feedback-form .community-link:hover {
-  color: #3730a3;
-  text-decoration: underline;
-}
-
-.feedback-form .community-link:focus-visible {
-  outline: 3px solid #a5b4fc;
-  outline-offset: 4px;
-  border-radius: 4px;
+@media (prefers-reduced-motion: reduce) {
+  .feedback-form input,
+  .feedback-form select,
+  .feedback-form textarea,
+  .feedback-form button {
+    transition: none;
+  }
 }
