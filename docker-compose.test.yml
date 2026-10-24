@@ -1,0 +1,26 @@
+name: productpulse-test
+
+services:
+  db:
+    image: mariadb:11.8
+    environment:
+      MARIADB_DATABASE: productpulse_test
+      MARIADB_USER: productpulse_test
+      MARIADB_PASSWORD: test_password_local
+      MARIADB_ROOT_PASSWORD: test_root_password_local
+
+    ports:
+      - "127.0.0.1:3309:3306"
+
+    volumes:
+      - productpulse_test_db_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  productpulse_test_db_data:
