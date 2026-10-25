@@ -40,7 +40,7 @@ public class FeedbackVoteService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Feedback not found"));
 
-        if (feedback.getStatus() != FeedbackStatus.APPROVED) {
+        if (feedback.getStatus() != FeedbackStatus.APPROVED && feedback.getStatus() != FeedbackStatus.PENDING) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "Feedback not approved");
         }
