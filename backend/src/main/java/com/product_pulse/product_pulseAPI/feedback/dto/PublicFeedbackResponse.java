@@ -39,7 +39,9 @@ public record PublicFeedbackResponse(
         Objects.requireNonNull(feedback, "feedback");
 
         if (feedback.getStatus()
-                != com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus.APPROVED) {
+                != com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus.APPROVED
+                && feedback.getStatus()
+                != com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus.PENDING) {
             throw new IllegalArgumentException(
                     "Seuls les feedbacks approuvés peuvent être publiés"
             );

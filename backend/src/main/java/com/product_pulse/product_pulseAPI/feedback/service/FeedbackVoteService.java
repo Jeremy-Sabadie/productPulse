@@ -85,8 +85,8 @@ public class FeedbackVoteService {
                     HttpStatus.BAD_REQUEST, "Invalid user identifier");
         }
 
-        return voteRepository.findFeedbackIdsByUserIdAndStatus(
-                userId, FeedbackStatus.APPROVED);
+        return voteRepository.findFeedbackIdsByUserIdAndStatusIn(
+                userId, java.util.List.of(FeedbackStatus.PENDING, FeedbackStatus.APPROVED));
     }
 
     private void validate(Long feedbackId, Long userId) {

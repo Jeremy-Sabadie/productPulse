@@ -110,7 +110,7 @@ export class AdminDashboard implements OnInit {
            * inclure voteCount dans le DTO administrateur
            * pour supprimer ces requêtes supplémentaires.
            */
-          if (this.view() === 'APPROVED') {
+          if (this.view() === 'APPROVED' || this.view() === 'PENDING') {
             for (const feedback of response.content) {
               this.feedbackService
                 .getVoteCount(feedback.id)

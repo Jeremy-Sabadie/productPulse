@@ -269,7 +269,7 @@
                   </div>
 
                   <!-- Les compteurs ne sont pas exposés au public. -->
-                  @if (view() === 'APPROVED') {
+                  @if (view() === 'APPROVED' || view() === 'PENDING') {
                     <p class="feedback-votes">
                       Soutiens :
                       {{ voteCounts()[feedback.id] === undefined

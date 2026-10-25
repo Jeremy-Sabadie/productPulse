@@ -42,10 +42,16 @@ class PublicFeedbackResponseTest {
     }
 
     @Test
-    void shouldRejectPendingFeedback() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> PublicFeedbackResponse.from(feedback())
+    void shouldAllowPendingFeedbackWithoutAuthorId() {
+        PublicFeedbackResponse response =
+                PublicFeedbackResponse.from(feedback());
+
+        assertEquals("Suggestion", response.title());
+        assertFalse(
+                java.util.Arrays.stream(
+                        PublicFeedbackResponse.class.getRecordComponents()
+                ).anyMatch(component ->
+                        component.getName().equals("authorId"))
         );
     }
 
