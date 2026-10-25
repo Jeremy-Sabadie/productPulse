@@ -24,10 +24,10 @@ public interface FeedbackVoteRepository extends JpaRepository<FeedbackVote, Long
             SELECT v.feedback.id
             FROM FeedbackVote v
             WHERE v.userId = :userId
-              AND v.feedback.status = :status
+              AND v.feedback.status IN :statuses
             """)
-    List<Long> findFeedbackIdsByUserIdAndStatus(
+    List<Long> findFeedbackIdsByUserIdAndStatusIn(
             @Param("userId") Long userId,
-            @Param("status") FeedbackStatus status
+            @Param("statuses") java.util.Collection<FeedbackStatus> statuses
     );
 }

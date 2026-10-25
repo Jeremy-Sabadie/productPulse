@@ -14,9 +14,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests unitaires des règles métier du vote utilisateur.
- */
 class FeedbackVoteServiceTest {
 
     private FeedbackRepository feedbackRepository;
@@ -71,12 +68,34 @@ class FeedbackVoteServiceTest {
     }
 
     @Test
-    void shouldRejectVoteOnPendingFeedback() {
+    void shouldSupportPendingFeedback() {
         Feedback pending = new Feedback(
-                "Idée", "Description", "MY_POPOTE", 42L, Instant.now()
+                "Idée",
+                "Description",
+                "MY_POPOTE",
+                42L,
+                Instant.now()
         );
+
         when(feedbackRepository.findById(1L))
                 .thenReturn(Optional.of(pending));
+        when(voteRepository.existsByFeedbackIdAndUserId(1L, 42L))
+                .thenReturn(false);
+
+        service.support(1L, 42L);
+
+        verify(voteRepository).save(any());
+    }
+
+    @Test
+    void shouldRejectVoteOnRejectedFeedback() {
+        Feedback rejected = new Feedback(
+                "Idée", "Description", "MY_POPOTE", 42L, Instant.now()
+        );
+        rejected.reject();
+
+        when(feedbackRepository.findById(1L))
+                .thenReturn(Optional.of(rejected));
 
         ResponseStatusException exception = assertThrows(
                 ResponseStatusException.class,

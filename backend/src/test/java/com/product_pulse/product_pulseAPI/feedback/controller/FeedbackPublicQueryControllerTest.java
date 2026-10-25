@@ -44,7 +44,7 @@ class FeedbackPublicQueryControllerTest {
         Page<Feedback> approvedFeedbacks =
                 new PageImpl<>(List.of(feedback));
 
-        when(queryService.findAll(FeedbackStatus.APPROVED, 0, 10))
+        when(queryService.findCommunity(0, 10))
                 .thenReturn(approvedFeedbacks);
 
         ResponseEntity<Page<PublicFeedbackResponse>> response =
@@ -58,8 +58,7 @@ class FeedbackPublicQueryControllerTest {
                 PublicFeedbackResponse.class.getRecordComponents()
         ).anyMatch(component -> component.getName().equals("authorId")));
 
-        verify(queryService).findAll(
-                FeedbackStatus.APPROVED,
+        verify(queryService).findCommunity(
                 0,
                 10
         );
@@ -69,7 +68,7 @@ class FeedbackPublicQueryControllerTest {
 
     @Test
     void shouldReturnEmptyPageWhenNoFeedbackIsApproved() {
-        when(queryService.findAll(FeedbackStatus.APPROVED, 0, 10))
+        when(queryService.findCommunity(0, 10))
                 .thenReturn(Page.empty());
 
         ResponseEntity<Page<PublicFeedbackResponse>> response =
@@ -79,8 +78,7 @@ class FeedbackPublicQueryControllerTest {
         assertNotNull(response.getBody());
         assertTrue(response.getBody().isEmpty());
 
-        verify(queryService).findAll(
-                FeedbackStatus.APPROVED,
+        verify(queryService).findCommunity(
                 0,
                 10
         );

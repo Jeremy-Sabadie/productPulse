@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { FormsModule, NgForm } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
@@ -18,6 +19,7 @@ describe('FeedbackForm', () => {
     await TestBed.configureTestingModule({
       imports: [FeedbackForm],
       providers: [
+        provideRouter([]),
         { provide: NotificationService, useValue: {
           feedbackSubmitted: vi.fn().mockResolvedValue(undefined),
           confirm: vi.fn().mockResolvedValue(true),
@@ -58,6 +60,7 @@ describe('FeedbackForm', () => {
     const component = fixture.componentInstance;
     component.title = 'Problème de courses';
     component.description = 'Un ingrédient apparaît deux fois.';
+    component.category = 'BUG';
 
     fixture.detectChanges();
     await fixture.whenStable();
@@ -68,8 +71,9 @@ describe('FeedbackForm', () => {
     expect(feedbackServiceMock.createFeedback).toHaveBeenCalledWith({
       title: 'Problème de courses',
       description: 'Un ingrédient apparaît deux fois.',
+      category: 'BUG',
     });
 
-    expect(fixture.nativeElement.textContent).toContain('Avis envoyé ! Merci pour votre retour.');
+    expect(fixture.nativeElement.textContent).toContain('Avis envoyé ! Il sera examiné avant publication.');
   });
 });

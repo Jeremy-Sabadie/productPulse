@@ -238,11 +238,7 @@ class AdminSecurityHttpTest {
         Feedback feedback = feedback();
         feedback.approve();
 
-        when(queryService.findAll(
-                com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus.APPROVED,
-                0,
-                10
-        )).thenReturn(new PageImpl<>(List.of(feedback)));
+        when(queryService.findCommunity(0, 10)).thenReturn(new PageImpl<>(List.of(feedback)));
 
         mockMvc.perform(get("/api/feedback")
                         .header(
@@ -255,11 +251,7 @@ class AdminSecurityHttpTest {
                 .andExpect(jsonPath("$.content[0].authorId").doesNotExist())
                 .andExpect(jsonPath("$.content[0].status").doesNotExist());
 
-        verify(queryService).findAll(
-                com.product_pulse.product_pulseAPI.feedback.entity.FeedbackStatus.APPROVED,
-                0,
-                10
-        );
+        verify(queryService).findCommunity(0, 10);
     }
 
 

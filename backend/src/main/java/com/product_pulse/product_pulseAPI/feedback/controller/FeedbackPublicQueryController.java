@@ -58,7 +58,7 @@ public class FeedbackPublicQueryController {
             @RequestParam(defaultValue = "10") int size
     ) {
         Page<PublicFeedbackResponse> response = queryService
-                .findAll(FeedbackStatus.APPROVED, page, size)
+                .findCommunity(page, size)
                 .map(PublicFeedbackResponse::from);
 
         return ResponseEntity.ok(response);

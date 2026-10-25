@@ -160,6 +160,14 @@ public class FeedbackQueryService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public Page<Feedback> findCommunity(int page, int size) {
+        return repository.findByStatusIn(
+                List.of(FeedbackStatus.PENDING, FeedbackStatus.APPROVED),
+                createPageable(page, size)
+        );
+    }
+
     /**
      * Historique personnel : US07.
      *

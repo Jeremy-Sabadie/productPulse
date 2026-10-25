@@ -28,6 +28,11 @@ public interface FeedbackRepository extends
         JpaRepository<Feedback, Long>,
         JpaSpecificationExecutor<Feedback> {
 
+    Page<Feedback> findByStatusIn(
+            java.util.Collection<FeedbackStatus> statuses,
+            Pageable pageable
+    );
+
     /**
      * Recherche les avis classés du plus soutenu au moins soutenu.
      *

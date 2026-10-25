@@ -40,7 +40,7 @@ public class FeedbackVoteService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Feedback not found"));
 
-        if (feedback.getStatus() != FeedbackStatus.APPROVED) {
+        if (feedback.getStatus() != FeedbackStatus.APPROVED && feedback.getStatus() != FeedbackStatus.PENDING) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "Feedback not approved");
         }
@@ -85,8 +85,8 @@ public class FeedbackVoteService {
                     HttpStatus.BAD_REQUEST, "Invalid user identifier");
         }
 
-        return voteRepository.findFeedbackIdsByUserIdAndStatus(
-                userId, FeedbackStatus.APPROVED);
+        return voteRepository.findFeedbackIdsByUserIdAndStatusIn(
+                userId, java.util.List.of(FeedbackStatus.PENDING, FeedbackStatus.APPROVED));
     }
 
     private void validate(Long feedbackId, Long userId) {

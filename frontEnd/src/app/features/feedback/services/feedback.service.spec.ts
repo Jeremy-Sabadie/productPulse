@@ -31,6 +31,7 @@ describe('FeedbackService', () => {
     const feedback = {
       title: 'Problème de liste de courses',
       description: 'Un ingrédient apparaît deux fois.',
+      category: 'BUG' as const,
     };
 
     let createdId: number | undefined;
