@@ -1,6 +1,7 @@
 
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule, NgModel } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { NotificationService } from '../../../core/services/notification.service';
@@ -13,7 +14,7 @@ import { FeedbackService } from '../services/feedback.service';
 @Component({
   selector: 'app-feedback-form',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './feedback-form.html',
   styleUrl: './feedback-form.css',
 })
