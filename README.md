@@ -1,3 +1,4 @@
+
 # 📊 ProductPulse
 
 **Plateforme de collecte, de modération et de suivi des retours utilisateurs.**
@@ -6,11 +7,11 @@ ProductPulse est une application web full-stack développée pour accompagner [M
 
 Son objectif est de transformer les avis, suggestions et signalements de bugs en informations exploitables pour améliorer un produit logiciel.
 
-Ce projet personnel illustre une démarche **Product Builder**, à la croisée de la conception fonctionnelle, du développement et de la qualité logicielle.
+Ce projet personnel illustre une démarche **Product Builder**, associant conception fonctionnelle, développement, qualité logicielle et automatisation des tests.
 
 ---
 
-## 🎯 Objectifs
+## 🎯 Objectifs du projet
 
 - Centraliser les retours utilisateurs
 - Identifier les anomalies et demandes d'évolution
@@ -18,6 +19,8 @@ Ce projet personnel illustre une démarche **Product Builder**, à la croisée d
 - Donner de la visibilité sur le traitement des retours
 - Aider à prioriser les améliorations du produit
 - Relier les retours utilisateurs au suivi du développement
+
+ProductPulse constitue un complément fonctionnel de My Popote et un exemple concret de démarche d'amélioration continue.
 
 ---
 
@@ -32,7 +35,7 @@ Le périmètre fonctionnel comprend :
 - Consultation des avis publiés après modération
 - Consultation de l'historique personnel
 - Suivi du statut des avis
-- Soutien des retours d'autres utilisateurs
+- Possibilité de soutenir les retours d'autres utilisateurs
 
 ### Espace administrateur
 
@@ -40,29 +43,29 @@ Le périmètre fonctionnel comprend :
 - Consultation et modération des avis
 - Gestion des statuts
 - Filtrage par catégories
-- Consultation des soutiens pour aider à la priorisation
+- Consultation des soutiens pour faciliter la priorisation
 - Identification des retours pouvant devenir des tickets de développement
 
 ### Évolutions prévues
 
-- Création de tickets GitHub Issues depuis les retours sélectionnés
-- Suivi des corrections et évolutions
-- Export PDF des retours
-- Renforcement des tests automatisés et de la CI/CD
+- Création de tickets GitHub Issues à partir des retours sélectionnés
+- Amélioration de la traçabilité entre les retours et les corrections
+- Export PDF des retours et de leur suivi
+- Enrichissement progressif des parcours utilisateurs
 
-Les fonctionnalités décrivent le périmètre du produit ; leur disponibilité effective dépend de l'avancement des développements.
+Les fonctionnalités décrivent le périmètre du produit. Leur disponibilité effective dépend de l'avancement des développements.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture technique
 
-ProductPulse repose sur une architecture full-stack séparant l'interface, la logique métier et la persistance.
+ProductPulse repose sur une architecture full-stack séparant l'interface utilisateur, la logique métier et la persistance.
 
 ```text
 Utilisateur / Administrateur
             |
             v
-     Angular / TypeScript
+     Angular 22 / TypeScript
             |
         REST / JSON
             |
@@ -90,7 +93,9 @@ Repository
 JPA / MariaDB
 ```
 
-Le **Repository Pattern** permet d'isoler la persistance de la logique métier, facilitant les tests, la maintenance et l'évolution de l'application.
+Cette organisation favorise la séparation des responsabilités, la testabilité, la maintenabilité et l'évolution de l'application.
+
+Le **Repository Pattern** permet d'isoler la persistance de la logique métier.
 
 ---
 
@@ -105,7 +110,8 @@ Le **Repository Pattern** permet d'isoler la persistance de la logique métier, 
 | Migrations | Flyway |
 | Sécurité | Spring Security, JWT RS256 |
 | Tests backend | JUnit, Spring Boot Test |
-| Tests E2E | Playwright (automatisation à renforcer) |
+| Tests E2E | Playwright |
+| CI/CD | GitHub Actions, pipelines de tests automatisés |
 | Infrastructure | Docker, Docker Compose, VPS Linux |
 | Déploiement | HTTPS, reverse proxy Caddy |
 | Versionnement | Git, GitHub |
@@ -115,9 +121,7 @@ Le **Repository Pattern** permet d'isoler la persistance de la logique métier, 
 
 ## 🔐 Authentification et intégration avec My Popote
 
-ProductPulse est conçu comme une application complémentaire de My Popote.
-
-L'objectif est de proposer une expérience cohérente sans imposer la création d'un second compte utilisateur.
+ProductPulse fonctionne comme une application complémentaire de My Popote, sans imposer la création d'un second compte utilisateur.
 
 ### Authentification partagée
 
@@ -155,47 +159,97 @@ Cette architecture permet de réutiliser une identité commune entre plusieurs a
 
 ---
 
-## 🧪 Qualité logicielle et stratégie de tests
+## 🧪 Qualité logicielle et tests automatisés
 
-La qualité logicielle fait partie intégrante du projet.
+La qualité logicielle constitue un axe central de ProductPulse.
 
-Les principaux axes de validation concernent :
+Elle est intégrée au cycle de développement grâce à des **tests automatisés et des pipelines GitHub Actions déjà opérationnels**.
+
+### Stratégie de tests
+
+La démarche de validation couvre notamment :
 
 - Les règles métier de gestion des avis
 - La validation des données
 - Les endpoints REST
-- Les contrôles d'accès
-- La vérification des JWT
-- Les opérations de persistance
-- Les parcours utilisateurs
+- Les contrôles d'accès et les autorisations
+- La vérification des JWT signés en RS256
+- Les comportements du frontend
+- Les parcours utilisateurs avec Playwright
 - La prévention des régressions
 
-### Démarche de développement
+### Tests backend — JUnit et Spring Boot Test
 
-```text
-Besoin utilisateur
-        |
-        v
-Analyse fonctionnelle
-        |
-        v
-Critères d'acceptation
-        |
-        v
-Tests
-        |
-        v
-Développement
-        |
-        v
-Validation / Refactoring
-```
+Les tests backend vérifient les comportements applicatifs, les règles métier, les endpoints REST et les mécanismes de sécurité.
 
-L'objectif est de combiner conception fonctionnelle, tests techniques et validation des comportements attendus.
+Ils contribuent à détecter les anomalies avant l'intégration des modifications.
+
+### Tests end-to-end — Playwright
+
+Playwright permet d'automatiser la validation des parcours utilisateurs dans le navigateur.
+
+Ces tests complètent les vérifications backend en contrôlant les interactions entre les différents composants de l'application.
+
+### Démarche QA
+
+Le développement associe :
+
+1. Analyse du besoin utilisateur
+2. Définition des critères d'acceptation
+3. Conception des cas de test
+4. Développement des fonctionnalités
+5. Exécution des tests automatisés
+6. Analyse des résultats et correction des anomalies
+7. Validation avant intégration
+
+Cette démarche illustre une approche de la qualité logicielle allant de la conception des tests à leur automatisation.
 
 ---
 
-## 📋 Cycle de vie des retours
+## ⚙️ CI/CD — GitHub Actions
+
+**Des workflows GitHub Actions sont en place et opérationnels sur le dépôt ProductPulse.**
+
+Ils permettent d'automatiser les contrôles qualité et de détecter les régressions lors des évolutions du projet.
+
+```text
+Modification du code
+        |
+        v
+Git / GitHub
+        |
+        v
+GitHub Actions
+        |
+        v
+Exécution des contrôles automatisés
+        |
+        v
+Résultats des tests
+        |
+        v
+Analyse et correction si nécessaire
+        |
+        v
+Validation de l'intégration
+```
+
+### Apports de l'intégration continue
+
+- Exécution reproductible des contrôles techniques
+- Détection précoce des régressions
+- Visibilité sur les résultats des tests
+- Fiabilisation des modifications
+- Traçabilité des validations
+- Réduction des vérifications manuelles répétitives
+
+L'intégration continue est une **réalisation effective du projet**, et non une fonctionnalité prévue.
+
+Les suites de tests et les workflows restent évolutifs afin d'accompagner les nouvelles fonctionnalités.
+
+---
+
+## 📋 Gestion du cycle de vie des retours
 
 ProductPulse vise à assurer la traçabilité d'un retour depuis son dépôt jusqu'à son éventuelle prise en charge dans le développement.
 
@@ -223,13 +277,13 @@ Correction ou évolution
 
 L'intégration prévue avec **GitHub Issues** permettra de relier les retours sélectionnés aux tâches techniques correspondantes.
 
-Ce processus constitue un objectif fonctionnel du projet, et non une chaîne entièrement automatisée à ce stade.
+Cette intégration constitue une évolution fonctionnelle, et non une automatisation déjà opérationnelle.
 
 ---
 
 ## 🐳 Docker et déploiement
 
-ProductPulse est conteneurisé et a fait l'objet d'un déploiement sur un VPS Linux personnel.
+ProductPulse est conteneurisé et déployé sur un **VPS Linux personnel**.
 
 ```text
 Internet
@@ -262,9 +316,11 @@ Le travail de déploiement comprend :
 - Authentification interapplications
 - Vérifications après mise en production
 
+Le déploiement sur VPS et les workflows GitHub Actions constituent deux réalisations complémentaires : **exploitation de l'application et automatisation de sa validation qualité**.
+
 ---
 
-## 🔄 Méthode de développement
+## 🔄 Organisation du développement
 
 Le développement repose sur Git et GitHub, avec des branches dédiées aux fonctionnalités et corrections.
 
@@ -279,6 +335,9 @@ Branche feature / fix
         |
         v
 Développement et tests
+        |
+        v
+CI GitHub Actions
         |
         v
 Revue et validation
@@ -335,7 +394,7 @@ Cette démarche associe **analyse fonctionnelle, conception produit, développem
 
 ## 🚀 État du projet
 
-**Application développée et déployée sur un VPS personnel.**
+**Application développée et déployée sur un VPS personnel, avec des tests automatisés et des workflows GitHub Actions opérationnels.**
 
 Le projet continue d'évoluer pour compléter les parcours utilisateurs et renforcer la gestion du cycle de vie des retours.
 
@@ -343,8 +402,8 @@ Le projet continue d'évoluer pour compléter les parcours utilisateurs et renfo
 
 - Finaliser et valider les parcours utilisateurs
 - Intégrer GitHub Issues
-- Renforcer la couverture de tests automatisés
-- Compléter les pipelines CI/CD
+- Maintenir et enrichir les suites de tests automatisés existantes
+- Faire évoluer les workflows CI/CD selon les besoins du projet
 - Améliorer l'observabilité et le suivi des anomalies
 
 ---
