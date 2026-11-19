@@ -11,6 +11,22 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_DATABASE: productpulse
+          MARIADB_USER: productpulse
+          MARIADB_PASSWORD: ci_test_password
+          MARIADB_ROOT_PASSWORD: ci_root_password
+        ports:
+          - 3308:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,6 +39,8 @@ jobs:
 
       - name: Tests JUnit et couverture JaCoCo
         working-directory: backend
+        env:
+          DB_PASSWORD: ci_test_password
         run: bash ./mvnw --batch-mode verify
 
       - name: Publier les rapports de tests
